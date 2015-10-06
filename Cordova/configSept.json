@@ -1,0 +1,87 @@
+{
+    "data" : {//Represent all tables and relations here, as well as how it may be displayed
+        "login" : true,
+        //Auto generated with "login" : true
+        "OAuth" : {
+            "fields" : {//Auto-gen OAuthID
+                "Name" : "string",
+            },
+            "oto" : [{"this" : "User"}]//OneToOne
+        },
+        "User" : {
+            "fields" : {//Auto generated UserID field
+                "Name" : "string",
+                "PictureUrl" : "string",
+                "Info" : "long string"
+            },
+            "show" : [
+                "Name","PictureURL","Info"
+            ]
+        },
+        //User config:
+        "Post" : {
+            "fields" : {//Auto-gen PostID
+                "Content" : "long string",
+                "Created" : "date"
+            },
+            "oto" : [{"this" : "User"}],//OneToOne
+            "sortBy" : "Created",
+            "show" : [//What will actually be shown on the client
+                "Content","@ Created on ","Created"
+            ]
+        },
+        "Comment" : {//Comments on a post
+            "fields" : {//Auto-gen CommentID
+                "Content" : "long string",
+                "Posted" : "Date"
+            },
+            "oto" : [//OneToOne
+                {"this":"Post"},//Post foreign key
+                {"this":"User"}//User foreign key
+            ],
+            "sortBy" : "Posted",
+            "show" : [
+                "Post.Content"," @By ","User"," @On ","Posted","Content"
+            ]
+        },
+        "Friend" : {
+            "fields" : {
+                "Began" : "Date"
+            },
+            "mtm" : [//mtm:ManyToMany
+                {"User","User"}//Hot to specify which User to search/return
+            ],
+            "sortBy" : "Created",
+            "show" : [
+                "Began", "User"
+            ]
+        }
+    },
+    "pages": {//Use the Objects prebiously declared to show the data
+        "Login" : true,//Auto-generate login page
+            //Default Params: loggedInUser
+        "Home" : {
+            "view" : ["User.get(loggedInUser)","Friend.getAll(loggedInUser)"]
+        },
+        "User" : {
+            "params" : ["User"],
+            "view" : ["User.get(User)","Posts.getAll(User)"]
+        },
+        "Post" : {
+            "params" : ["Post"],
+            "view" : ["Comment.get(Post)"]
+        }
+    },
+    "links" : [//How to get from one page to another (pass the params)
+        "User" : {//When User obj is shown
+            "text" : "User.Name",//Turn the Name field into a link to...
+            "page" : "User",//The User Page
+            "params" : ["User"]//With ID as the parameter
+        },
+        "Post" : {
+            "text" : "Post.Content",
+            "page" : "Post",
+            "params" : ["Post"]
+        }
+    ]
+}
