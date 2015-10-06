@@ -1,0 +1,141 @@
+// Things we should still work on:
+// - extending default objects
+// - Friendship relationship
+{
+    // We will supply certain modules that they can import
+    "import" : [
+                "User",  //Creates login (oauth) functionality and stores user in db 
+                "LoggedInUser"//Paramater that can be passed in to Pages
+    ], 
+    "data" : {//Represent all tables and relations here, as well as how it may be displayed
+        /*
+         * Data is an Array od Data Objects
+         * Each Entry is an object with the following options
+         *  - fields : explicitly declare the fields (and type) of the Data Object
+         *      - valid Types: string, long string, long, Date...  
+         *      OR the name of another Data Object
+         *  - relations : Declare the Data Objects relations here with a name and 
+         *  a matching type. Additional fields and options may be created by using 
+         *  the Data Object name in a Data Object declaration.
+         *      - See User (and Friendship) example for details
+         *  - display : What fields to show when Data Object is shown on the app.
+         *    This is an array of strings where each string is a field of the obj
+         *    or a string literal (start the string with @)
+         *  - sortBy : What field to default sorty by on the API
+         */
+        //Auto generated with "import" : ['User']'
+        "User" : {
+            "fields" : { 
+                "Name" : "string",
+                "PictureUrl" : "string",
+                "Info" : "long string"                  
+            },
+            "relations" : {
+                "Friendship" : "User" //A User to User relationship
+            },
+            "display" : [  //The fields that are displayed on the Cordova App
+                "Name","PictureURL","Info"
+            ]
+        },
+        "Friendship" : {//Referring to the friendship in the User Data Object
+            "fields" : {//Additional fields
+                "BeganDate" : "Date"
+            },
+            "sortBy" : "BeganDate",
+            "display" : [
+                "User", "@ Friends since ", "BeganDate"
+            ]
+        },
+        //User config (Not auto-generated with imports)
+        "Post" : { //Think FB status update
+            "fields" : {
+                "Content" : "long string",
+                "CreateDate" : "date",
+                "CreatedBy" : "User"//Every post is created by a particular User
+            },
+            "sortBy" : "CreateDate",
+            "display" : [//What will actually be shown on the client
+                "Content","@ Created on ","CreateDate"
+            ]
+        },
+        "Comment" : {//Comments on a post
+            "fields" : {//Auto-gen CommentID
+                "Content" : "long string",
+                "PostDate" : "Date",
+                "PostBy": "User",
+                "PostTo" : "Post"
+            },
+            "sortBy" : "PostDate",
+            "display" : [
+                " @By ","PostBy"," @On ","PostDate","Content"
+            ]
+        }
+    },
+    "pages": {//Use the Objects previously declared to show the data
+        /*
+         * Pages is an array of Objects that describe how to use the Data
+         * Objects and turn them into spefic views/pages on the Cordova App
+         * Each Page can have the following fields:
+         *   - view : Which Data Objects to display
+         *   - create : Render a functioning form for these Data Objexts
+         *   - modify : Render a form with the current data already filled in
+         * Each of these fields has two additional fields
+         *   - params : What we should filter the data by or what fields should
+         *     be automatically populated. This is an array of strings
+         *   - show : Which Object to query and show, or what form to create.
+         *     Also an array of strings
+         *
+         * Additional Notes:
+         * A Page named "Home", will be the page that is rendered by default
+         *
+         */
+        "Home" : {//Special keyword (think index.html)
+            "view" : {//What data to show
+                "params" : ["LoggedInUser"],//LoggedInUser imported in import sec
+                "show" : ["User", "Friendship"]
+            },
+            "create" : {//Ability to create a new post
+                "params" : ["LoggedInUser"],
+                "show" : ["Post"]
+            }
+        },
+        "Profile" : {
+            "view" : {
+                "params" : ["User"],
+                "show" : ["User","Post"]
+            }
+        },
+        "PostInfo" : {
+            "view" : {
+                "params" : ["Post"],
+                "show" : ["Post","Comment"]
+            }
+        }
+    },
+    "links" : {//How to get from one page to another (pass the params)
+        /*
+         * Links is where we specify interactivity between Data Objects & Pages
+         * This is an array of obj where each obj is a mapping from a Data
+         * Object to a Page. Any time the Data Object is displayed, there will
+         * be a hyperlink to a page
+         * Each obj will follow the format:
+         *   - The name will specify which Data Object we are using to create
+         *     the link
+         *   - The fields of this obh will be:
+         *     - text : Which field from the Data Object will be the text we
+         *       use for the hyperlink
+         *     - destinationPage : Which page will the link go to
+         *       Note: By default it will pass the clicked on obj as the param
+         */
+        "User" : {//When User obj is shown
+            "text" : "Name",//Turn the Name field into a link to... 
+            "destinationPage" : "Profile"//The User Page
+            //Parameter is implicitly User
+        },
+        "Post" : {//When a Post obj is shown
+            "text" : "Content",//Turn the content field
+            "destinationPage" : "PostInfo"//Into a link to the Post page
+            //With the Post as the param
+        }
+    }
+}
