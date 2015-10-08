@@ -1,10 +1,8 @@
 function loginHandler(r){
-    log(r);
-    hello(r.network).api('me').on('complete', log);
-}
-
-function log(r){
-    console.log(r);    
+    console.log(r);
+    hello(r.network).api('me').then(function(me){
+        console.log(me);
+    });
 }
 // We use an "Immediate Function" to initialize the application to avoid leaving anything behind in the global scope
 (function () {
