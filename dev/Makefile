@@ -5,7 +5,10 @@ JC = javac
 	$(JC) $*.java
 
 CLASSES = \
-        Test.java
+		Field.java\
+		Relation.java\
+        Parser.java\
+		DataObj.java
 
 default: classes
 
@@ -14,8 +17,8 @@ json: org/json/*.java
 
 classes: $(CLASSES:.java=.class)
 
-run: 
-	java Test
+run: classes
+	java Parser
 
 clean:
 	$(RM) *.class
