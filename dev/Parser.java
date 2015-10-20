@@ -15,7 +15,7 @@ public class Parser {
     /** Uses a StringBuilder to convert the file into a String and strip all comments */
     public static String fileToString(String path) throws IOException{
         String match =  "//.*?\n" +"|"+ //Match single line comments
-                        "/\\*.*?\\*/";
+                        "/\\*.*?\\*/";  //Match multi line comment (/* */)
         Pattern p = Pattern.compile(match,Pattern.DOTALL | Pattern.MULTILINE);
         Scanner reader = new Scanner(new File(path)).useDelimiter(p);
 
@@ -54,15 +54,37 @@ public class Parser {
 
             //Iterate thru
             parseData(data);
-            Iterator it = dataObjsMap.entrySet().iterator();
-            while(it.hasNext()){
-                Map.Entry one = (Map.Entry)it.next();
-                System.out.println(one.getValue().toString());
-            }
+            //Resolve realtions and fields
+            resolveRealtions();
+
+            System.out.println(toSql());
         }catch(IOException e){
             System.err.println("Error opening up file!");
             e.printStackTrace();
         }
+    }
+    public static String toSql(){
+        StringBuilder s = new StringBuilder(4096);
+        s.append("CREATE DATABASE  IF NOT EXISTS `").append("DBNAME").append("`;\n");
+        s.append("USE `").append("DBNAME").append("`;\n");
+        Iterator it = dataObjsMap.entrySet().iterator();
+        while(it.hasNext()){
+            Map.Entry one = (Map.Entry)it.next();
+            s.append(((DataObj)one.getValue()).toSql());
+        }
+        return s.toString();
+    }
+    public static void resolveRealtions(){
+        //1) Resolve all fields of D.O.s 
+        Iterator it = dataObjsMap.entrySet().iterator();
+        while(it.hasNext()){
+            Map.Entry one = (Map.Entry)it.next();
+            String name = (String)one.getKey();
+            DataObj data = (DataObj)one.getValue();
+            data.resolve(dataObjsMap);
+        }
+        
+        //2) Resolve all Relation objects
     }
     /* Parse the JSONObject data field and add it to the HashMap */
     public static void parseData(JSONObject data){
@@ -101,6 +123,7 @@ public class Parser {
                     dataObj.addRelation(new Relation(relationName,objName,toThis));
                 }
             }
+            //TODO add SortBy option
         }
     }
     public static List<DataObj> parseImports(JSONArray imports){

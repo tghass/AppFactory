@@ -61,8 +61,8 @@
         "Comment" : {//Comments on a post
             "fields" : {//Auto-gen CommentID
                 "Content" : "long string",
-                "PostDate" : "Date",
-                "PostBy": "User",
+                "CreateDate" : "date",
+                "CreatedBy": "User",
                 "PostTo" : "Post"
             },
             "sortBy" : "PostDate",

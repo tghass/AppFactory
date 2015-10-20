@@ -28,4 +28,8 @@ public class Relation{
     public String toString(){
         return "("+name+", a "+a+" to a "+b+" relation)"; 
     }
+
+    public String toSql(){
+        return "";
+    }
 }
