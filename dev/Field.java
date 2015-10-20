@@ -136,6 +136,7 @@ public class Field{
                 obj = typeStr;
             }
             else{
+                //TODO output helpful error msg
                 System.out.println("UNRESOLVED FIELD! ->"+this);
             }
         }

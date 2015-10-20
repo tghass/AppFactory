@@ -101,7 +101,19 @@ public class DataObj{
         return s.toString();
     }
 
-    public void resolve(HashMap<String,DataObj> dataObjsMap){
+    public void resolve(HashMap<String,DataObj> dataObjsMap,HashMap<String,Relation> relationsMap){
+        //Loop through all relations
+        //Try to find the Relation with this name
+        if(relationsMap.containsKey(name)){
+            Relation r = relationsMap.get(name);
+            //Set up the relation in the D.O.
+            Field f1 = new Field(r.getName()+"1",r.getA());
+            Field f2 = new Field(r.getName()+"2",r.getB());
+            //Add the new fileds
+            addField(f1);
+            addField(f2);
+            r.markResolved();//The relation is now resolved
+        }
         //Loop through all fields
         for(Field f : fields){
             //Try to find the missing field

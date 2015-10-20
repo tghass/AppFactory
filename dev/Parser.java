@@ -28,15 +28,6 @@ public class Parser {
     }
 
     public static void main(String[] args){
-        /*
-        String jsonString = "{\"stat\":  {\"sdr\": \"aa:bb:cc:dd:ee:ff\", \"rcv\": \"aa:bb:cc:dd:ee:ff\", \"time\": \"UTC in millis\", \"type\": 1, \"subt\": 1, \"argv\": [{\"type\": 1, \"val\":\"stackoverflow\"}]}}";
-        JSONObject jsonObject = new JSONObject(jsonString);
-        JSONObject newJSON = jsonObject.getJSONObject("stat");
-        jsonObject = new JSONObject(newJSON.toString());
-        System.out.println(jsonObject.getString("rcv"));
-        System.out.println(jsonObject.getJSONArray("argv"));
-        */
-
         try{
             String text = fileToString("../config.json");
             JSONObject conf = new JSONObject(text);
@@ -75,16 +66,28 @@ public class Parser {
         return s.toString();
     }
     public static void resolveRealtions(){
-        //1) Resolve all fields of D.O.s 
+        //1) Resolve all fields of D.O.s and Relations
         Iterator it = dataObjsMap.entrySet().iterator();
         while(it.hasNext()){
             Map.Entry one = (Map.Entry)it.next();
             String name = (String)one.getKey();
             DataObj data = (DataObj)one.getValue();
-            data.resolve(dataObjsMap);
+            data.resolve(dataObjsMap,relationsMap);
         }
         
-        //2) Resolve all Relation objects
+        //2) Confirm all Relations are resolved, otherwise report error
+        it = relationsMap.entrySet().iterator();
+        while(it.hasNext()){
+            Map.Entry one = (Map.Entry)it.next();
+            Relation r = (Relation)one.getValue();
+            if(!r.isResolved()){//If we have an unresolved relationship
+                System.out.println("Unresolved relationship!");
+                System.out.println("Unable to find matching DataObject for relationship:");
+                System.out.println(r);
+                System.out.println("Make sure that there is a Data Object by the same name");
+                System.exit(1);
+            }
+        }
     }
     /* Parse the JSONObject data field and add it to the HashMap */
     public static void parseData(JSONObject data){
@@ -104,7 +107,6 @@ public class Parser {
             while(fieldIt.hasNext()){
                 String fieldName = (String)fieldIt.next();
                 String type = fields.getString(fieldName);
-                //TODO, check if type is another DataObj
                 dataObj.addField(new Field(fieldName,type));
             }
             //Add Display
@@ -120,7 +122,9 @@ public class Parser {
                 while(relationIt.hasNext()){
                     String relationName = (String)relationIt.next();
                     String toThis = relations.getString(relationName);
-                    dataObj.addRelation(new Relation(relationName,objName,toThis));
+                    Relation r = new Relation(relationName,objName,toThis);
+                    dataObj.addRelation(r);
+                    relationsMap.put(relationName,r);
                 }
             }
             //TODO add SortBy option

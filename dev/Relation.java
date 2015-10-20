@@ -5,9 +5,11 @@ public class Relation{
     //////////
     //Fields//
     //////////
-    public String name;
-    public String a;//a to b relationship
-    public String b;
+    private String name;
+    private String a;//a to b relationship
+    private String b;
+    private boolean sameType;
+    private boolean resolved;
     
 
     ////////////////
@@ -19,11 +21,18 @@ public class Relation{
         this.name=name;
         a=d1;
         b=d2;
+        sameType = a.equals(b);
+        resolved=false;
     }
 
     ///////////
     //Methods//
     ///////////
+    public String getName(){ return name;}
+    public String getA(){ return a;}
+    public String getB(){ return b;}
+
+
     @Override
     public String toString(){
         return "("+name+", a "+a+" to a "+b+" relation)"; 
@@ -32,4 +41,6 @@ public class Relation{
     public String toSql(){
         return "";
     }
+    public void markResolved(){ resolved=true;}
+    public boolean isResolved(){ return resolved;}
 }
