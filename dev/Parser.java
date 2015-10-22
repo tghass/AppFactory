@@ -13,7 +13,7 @@ public class Parser {
 
 
     /** Uses a StringBuilder to convert the file into a String and strip all comments */
-    public static String fileToString(String path) throws IOException{
+    public String fileToString(String path) throws IOException{
         String match =  "//.*?\n" +"|"+ //Match single line comments
                         "/\\*.*?\\*/";  //Match multi line comment (/* */)
         Pattern p = Pattern.compile(match,Pattern.DOTALL | Pattern.MULTILINE);
@@ -27,9 +27,9 @@ public class Parser {
         return s.toString();
     }
 
-    public static void main(String[] args){
+    public void parseFile(String filename){
         try{
-            String text = fileToString("../config.json");
+            String text = fileToString(filename);
             JSONObject conf = new JSONObject(text);
             //Four first fileds
             assertTrue(conf.has("import"),"Configuration file missing 'import'");
@@ -48,24 +48,15 @@ public class Parser {
             //Resolve realtions and fields
             resolveRealtions();
 
-            System.out.println(toSql());
+            
         }catch(IOException e){
             System.err.println("Error opening up file!");
             e.printStackTrace();
         }
     }
-    public static String toSql(){
-        StringBuilder s = new StringBuilder(4096);
-        s.append("CREATE DATABASE  IF NOT EXISTS `").append("DBNAME").append("`;\n");
-        s.append("USE `").append("DBNAME").append("`;\n");
-        Iterator it = dataObjsMap.entrySet().iterator();
-        while(it.hasNext()){
-            Map.Entry one = (Map.Entry)it.next();
-            s.append(((DataObj)one.getValue()).toSql());
-        }
-        return s.toString();
-    }
-    public static void resolveRealtions(){
+	
+    
+    public void resolveRealtions(){
         //1) Resolve all fields of D.O.s and Relations
         Iterator it = dataObjsMap.entrySet().iterator();
         while(it.hasNext()){
@@ -90,7 +81,7 @@ public class Parser {
         }
     }
     /* Parse the JSONObject data field and add it to the HashMap */
-    public static void parseData(JSONObject data){
+    public void parseData(JSONObject data){
         Iterator<String> keys = data.keys();
         while(keys.hasNext()){//Loop thruy all data objs
             String objName = (String)keys.next();
@@ -130,7 +121,7 @@ public class Parser {
             //TODO add SortBy option
         }
     }
-    public static List<DataObj> parseImports(JSONArray imports){
+    public List<DataObj> parseImports(JSONArray imports){
         System.out.println("IMPORTS:");
         for(int i=0; i<imports.length(); i++){
             System.out.print(imports.getString(i)+",");
@@ -140,10 +131,10 @@ public class Parser {
     }
 
 
-    public static void assertTrue(boolean b,String text){
+    public void assertTrue(boolean b,String text){
         if(!b){
             System.out.println(text);
-            Thread.currentThread().getStackTrace();
+            Thread.currentThread().getStackTrace(); //TODO: A, Why do we have this? -T
             System.exit(1);
         }
     }
