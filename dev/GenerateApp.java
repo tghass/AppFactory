@@ -17,8 +17,10 @@ public class GenerateApp {
         return s.toString();
     }
 	
+	
+	
 	public static void main(String [] args) {
-		String filename = "../config.json"; //TODO: accept file from command line
+		String filename = args[0]; //TODO: accept file from command line
 		Parser parser = new Parser();
 
 		//Parse file: convert JavaScript objects to Java objects (DataObjects class) 

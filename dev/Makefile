@@ -1,5 +1,7 @@
 JC = javac
 
+VAR = ../config.json 
+
 .SUFFIXES: .java .class
 .java.class:
 	$(JC) $*.java
@@ -19,7 +21,7 @@ json: org/json/*.java
 classes: $(CLASSES:.java=.class)
 
 run: classes
-	java GenerateApp
+	java GenerateApp $(VAR)
 
 clean:
 	$(RM) *.class
