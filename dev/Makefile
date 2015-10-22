@@ -9,8 +9,9 @@ VAR = ../config.json
 CLASSES = \
 	Field.java\
 	Relation.java\
-        Parser.java\
 	DataObj.java\
+	Parser.java\
+	SqlGenerator.java\
 	GenerateApp.java
 
 default: classes
