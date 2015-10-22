@@ -1,5 +1,4 @@
 //sitepoint.com/using-node-mysql-javascript-client/
-
 var express= require('express');
 var app = express();
 

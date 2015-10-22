@@ -15,7 +15,10 @@ public class GenerateApp {
             s.append(((DataObj)one.getValue()).toSql());
         }
         return s.toString();
+		//TODO return file
     }
+	
+	
 	
 	
 	
@@ -26,10 +29,12 @@ public class GenerateApp {
 		//Parse file: convert JavaScript objects to Java objects (DataObjects class) 
 		parser.parseFile(filename); 
 		
-		//From the DataObjects
-		String sqldump = toSql(parser.dataObjsMap); //generate sqldump file
-		
+		//From the DataObjects, generate a sqldump file. 
+		String sqldump = toSql(parser.dataObjsMap); 
 		System.out.println(sqldump);
+		
+		ApiCreator apiCreator = new ApiCreator();
+		apiCreator.toSOAP(parser.dataObjsMap, String databaseIP);
 	}
 
 }
