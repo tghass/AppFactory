@@ -7,11 +7,26 @@ import java.util.regex.Pattern;
 
 
 public class Parser {
-    //Variables
-    public static HashMap<String,DataObj> dataObjsMap = new HashMap<String,DataObj>();
-    public static HashMap<String,Relation> relationsMap = new HashMap<String,Relation>();
+    //////////
+    //Fields//
+    //////////
+    private HashMap<String,DataObj> dataObjsMap;
+    private HashMap<String,Relation> relationsMap;
+    private ArrayList<String> imports;
 
+    ////////////////
+    //Constructors//
+    ////////////////
+    public Parser(){
+        dataObjsMap = new HashMap<String,DataObj>();
+        relationsMap = new HashMap<String,Relation>();
+        imports = new ArrayList<String>();
+    }
 
+    ///////////
+    //Methods//
+    ///////////
+    public HashMap<String,DataObj> getDataObjsMap(){ return dataObjsMap;}
     /** Uses a StringBuilder to convert the file into a String and strip all comments */
     public String fileToString(String path) throws IOException{
         String match =  "//.*?\n" +"|"+ //Match single line comments
@@ -40,10 +55,11 @@ public class Parser {
             JSONObject pages = conf.getJSONObject("pages");
             assertTrue(conf.has("links"),"Configuration file missing 'links'");
             JSONObject links = conf.getJSONObject("links");
-            //Print out data
+
+            //Parse Imports
             parseImports(imports);
 
-            //Iterate thru
+            //Parse Data
             parseData(data);
             //Resolve realtions and fields
             resolveRealtions();
@@ -121,20 +137,19 @@ public class Parser {
             //TODO add SortBy option
         }
     }
-    public List<DataObj> parseImports(JSONArray imports){
-        System.out.println("IMPORTS:");
-        for(int i=0; i<imports.length(); i++){
-            System.out.print(imports.getString(i)+",");
-        }System.out.println();
-        return new ArrayList<DataObj>();
-        //TODO, return actual objs
+    public void parseImports(JSONArray importsArr){
+        for(int i=0; i<importsArr.length(); i++){
+            imports.add(importsArr.getString(i));
+        }
     }
 
 
+    /* Confirm that something is true. If it isn't it will output the text
+     * followed by a backtrace to see where the error is occuring*/
     public void assertTrue(boolean b,String text){
         if(!b){
             System.out.println(text);
-            Thread.currentThread().getStackTrace(); //TODO: A, Why do we have this? -T
+            Thread.currentThread().getStackTrace(); //Print stack strace
             System.exit(1);
         }
     }

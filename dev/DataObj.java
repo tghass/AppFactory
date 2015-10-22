@@ -44,6 +44,8 @@ public class DataObj{
     ///////////
     //Methods//
     ///////////
+    public boolean isConverted(){return convertedToSql;}
+    public void markConverted(){ convertedToSql=true;}
     public boolean addRelation(Relation n){
         return relations.add(n);
     }
@@ -56,6 +58,9 @@ public class DataObj{
     public void setSortBy(Field n){
         sortBy=n;
     }
+    public String getName(){ return name;}
+    public List<Field> getFields(){ return fields;}
+    public List<DataObj> getDependencies(){ return dependencies;}
     @Override
     public String toString(){
         StringBuilder s = new StringBuilder(1024);
@@ -74,30 +79,6 @@ public class DataObj{
         }
         s.append("\nSortBy: ").append(sortBy.toString()).append("\n");
 
-        return s.toString();
-    }
-
-    public String toSql(){
-        StringBuilder s = new StringBuilder(1024);
-        if(!convertedToSql){
-            //Do all dependecies first
-            for(DataObj d: dependencies){
-                s.append(d.toSql());
-            }
-            //Now this one
-            s.append("DROP TABLE IF EXISTS `").append(name).append("`;\n");
-            s.append("CREATE TABLE `").append(name).append("`(\n");
-                for(Field f : fields){//Add fields
-                    s.append("").append(f.toSql());
-                }
-                s.append("  PRIMARY KEY (`").append(DataObj.ID).append("`),\n");
-                for(Field f : fields){//Add foreign keys
-                    s.append("").append(f.foreignKeySql());
-                }
-            s.setCharAt(s.lastIndexOf(","),' ');
-            s.append(");\n");
-            convertedToSql=true;//Only do it once!
-        }
         return s.toString();
     }
 
