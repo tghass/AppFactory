@@ -61,6 +61,7 @@ public class DataObj{
     public String getName(){ return name;}
     public List<Field> getFields(){ return fields;}
     public List<DataObj> getDependencies(){ return dependencies;}
+	public List<String> getDisplay() { return display; }
     @Override
     public String toString(){
         StringBuilder s = new StringBuilder(1024);

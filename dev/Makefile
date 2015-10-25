@@ -12,7 +12,8 @@ CLASSES = \
 	DataObj.java\
 	Parser.java\
 	SqlGenerator.java\
-	GenerateApp.java
+	GenerateApp.java\
+	ApiCreator.java
 
 default: classes
 

@@ -19,7 +19,8 @@ public class GenerateApp {
 		System.out.println(sqldump);
 		
 		ApiCreator apiCreator = new ApiCreator();
-		apiCreator.toSOAP(parser.dataObjsMap, String databaseIP);
+		System.out.println(apiCreator.createServerFile(parser.getDataObjsMap()));
+		
 	}
 
 }
