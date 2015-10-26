@@ -5,11 +5,12 @@
 	public class ApiCreator {
 			
 			public static int tabDepth = 0;
-		
+			
 			public static String createServerFile(HashMap<String,DataObj> dataObjsMap){
-				String db = genDbConnection();
-				//System.out.println(db);
 				StringBuilder s = new StringBuilder(4096); //TODO: change this #
+				
+				s.append(genDbConnection());
+				//System.out.println(db);
 				//For each data object, get object by ID
 				Iterator it = dataObjsMap.entrySet().iterator();
 				while(it.hasNext()){
@@ -20,7 +21,15 @@
 						s.append(genGetByFK(((DataObj)one.getValue())));
 					}
 				}
+				s.append(genListen());
 				return s.toString();
+			}
+			public static String genListen() {
+				StringBuilder s = new StringBuilder(1024); //TODO: change this #
+				s.append("var server = app.listen(3000, function() {\n");
+				s.append("\tconsole.log(\"We have started our server on port 3000\");\n");
+				s.append("});\n");
+				return s.toString();			
 			}
 			
 			public static String genDbConnection() {
@@ -28,6 +37,7 @@
 				s.append("//Express is a minimal and flexible Node.js web application framework that provides a robust set of features for web and mobile applications\n");
 				s.append("var express = require('express');\n");
 				s.append("var app = express();\n");
+				s.append("var mysql = require('mysql');\n");
 				s.append("\n//Establish connection to the MySQL database\n");
 				//TODO: replace with generated host,user,password, info
 				s.append("var con = mysql.createConnection({\n");
@@ -53,15 +63,10 @@
 				//System.out.println(dataObj.getName() + " has the following dependencies ");
 					for (Field f: dataObj.getFields()) {
 						if (f.getType() == Field.Type.FOREIGN_KEY) {
-							System.out.println(f.getName() + f.getTypeStr());
+					//		System.out.println(f.getName() + f.getTypeStr());
 						}
 					}
-					
-				/*for (DataObj d : dataObj.getDependencies()) {
-					System.out.println(d.getName());
-				}
-					*/
-				
+								
 				return "";
 			}
 			//Generate a get by id call for every table.
@@ -91,19 +96,14 @@
 				s.append("\tvar query = \""+ selectProperties(dataObj) + " from " + tableName + " as " +tableName.charAt(0)+ " where id = ?\";\n");
 				s.append("\tcon.query(query, req.params.id, function(err, rows0,fields) {\n");
 				s.append("\t\tif(err) throw err;\n");
-				
+				tabDepth = 0;
 				s.append(evaluateFK(dataObj,0,0,1, "", ""));
-				
-			 	s.append(returnTab(tabDepth+4) + "res.jsonp(rows0);\n");
-				while (tabDepth +4> 0) {
-					s.append(returnTab(3+tabDepth) + "});\n");
+			 	s.append(returnTab(tabDepth+2) + "res.jsonp(rows0);\n");
+				while (tabDepth +2 > 0) {
+					s.append(returnTab(1+tabDepth) + "});\n");
 					tabDepth -= 1;
 				}
-				System.out.println(s.toString());
-				
 				s.append("\n");
-			
-				
 				return s.toString();
 			}
 			
@@ -132,18 +132,8 @@
 				}
 				return s.toString();
 			}
-			public static String sqlRelationship() {
-				return "";
-			}
-			/*public static String evaluateFKstarter(DataObj d) {
-				StringBuilder s = new StringBuilder(4028);
-				for (Field f : d.getFields()) {
-					if (f.getType() == Field.Type.FOREIGN_KEY) {
-						s.append("app.get('/" + d.getName() + "/find/" + f.getName() + '/
-					}
-				}
 			
-			}*/
+			
 			//query NO starts at 0
 			//queryNoNext starts at 1
 			//depth starts at 0
@@ -182,9 +172,7 @@
 								
 							}
 						}
-						
-						//first, evaluate all the foreign keys on the current object
-								
+						//first, evaluate all the foreign keys on the current object	
 					}
 				}
 				Iterator it = dataObjsMap.entrySet().iterator();
@@ -193,11 +181,7 @@
 					s.append(evaluateFK(((DataObj)one.getKey()), depth, Integer.parseInt(((List<String>)one.getValue()).get(2)), queryNoNext, ((List<String>)one.getValue()).get(0), ((List<String>)one.getValue()).get(1)));
 					
 				}
-				
-				tabDepth = depth;
+				if (depth > tabDepth) { tabDepth = depth; }
 				return s.toString();
 			}
-				
-			//	return "" + evaluateFK + (times depth)"});";
-			
 	}

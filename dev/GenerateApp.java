@@ -19,7 +19,7 @@ public class GenerateApp {
 		System.out.println(sqldump);
 		
 		ApiCreator apiCreator = new ApiCreator();
-		apiCreator.createServerFile(parser.getDataObjsMap());
+		System.out.println(apiCreator.createServerFile(parser.getDataObjsMap()));
 		
 	}
 
