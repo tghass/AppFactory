@@ -1,7 +1,10 @@
 	import java.util.*;
-	
+	 class Counter {
+		public int c = 0;
+	}
 	public class ApiCreator {
-		
+			
+			public static int tabDepth = 0;
 		
 			public static String createServerFile(HashMap<String,DataObj> dataObjsMap){
 				String db = genDbConnection();
@@ -85,16 +88,22 @@
 					}
 				}
 				s.append("app.get('/" + tableName + "/find/:id', function(req,res) {\n");
-				s.append("\tvar query = \"select "+ fieldList.toString() + " from " + tableName + " where id = ?\";\n");
+				s.append("\tvar query = \""+ selectProperties(dataObj) + " from " + tableName + " as " +tableName.charAt(0)+ " where id = ?\";\n");
 				s.append("\tcon.query(query, req.params.id, function(err, rows0,fields) {\n");
 				s.append("\t\tif(err) throw err;\n");
-				s.append(evaluateFK(dataObj,0, " ", " "));
-				s.append("\t\tres.jsonp(rows);\n");
-				s.append("\t});\n");
-				s.append("});\n");
+				
+				s.append(evaluateFK(dataObj,0,0,1, "", ""));
+				
+			 	s.append(returnTab(tabDepth+4) + "res.jsonp(rows0);\n");
+				while (tabDepth +4> 0) {
+					s.append(returnTab(3+tabDepth) + "});\n");
+					tabDepth -= 1;
+				}
+				System.out.println(s.toString());
+				
 				s.append("\n");
 			
-			
+				
 				return s.toString();
 			}
 			
@@ -115,10 +124,10 @@
 				for (Field f: d.getFields()) {
 					if (firstField) {
 						firstField = false;
-						s.append(firstChar + "." + f.getName());
+						s.append(firstChar + "." + f.getName() +" ");
 					}
 					else {
-						s.append(", " + firstChar + "." + f.getName());
+						s.append(", " + firstChar + "." + f.getName() +" ");
 					}
 				}
 				return s.toString();
@@ -126,39 +135,53 @@
 			public static String sqlRelationship() {
 				return "";
 			}
-						
-			public static String evaluateFK(DataObj d, int depth,String lastQueryFrom, String lastQueryWhere) {
+			/*public static String evaluateFKstarter(DataObj d) {
+				StringBuilder s = new StringBuilder(4028);
+				for (Field f : d.getFields()) {
+					if (f.getType() == Field.Type.FOREIGN_KEY) {
+						s.append("app.get('/" + d.getName() + "/find/" + f.getName() + '/
+					}
+				}
+			
+			}*/
+			//query NO starts at 0
+			//queryNoNext starts at 1
+			//depth starts at 0
+			public static String evaluateFK(DataObj d, int depth, int queryNo, int queryNoNext, String lastQueryFrom, String lastQueryWhere) {
 				StringBuilder s = new StringBuilder(4028);
 				HashMap<DataObj, List<String>> dataObjsMap = new HashMap<DataObj, List<String>>(); 
 				for (Field f : d.getFields()) {
-					if (f.getType() == Field.Type.FOREIGN_KEY) {
-						DataObj fk = null;	
+					if (f.getType() == Field.Type.FOREIGN_KEY) {	
 						// get the object corresponding to the foreign key field str
 						// so that you know what fields to get in sql statement
 						for (DataObj fkObj: d.getDependencies()) {
 							if ((fkObj.getName()).equals(f.getTypeStr())) {
-								String parentRow = "rows" + Integer.toString(depth);
-								String fkRow = "rows" + Integer.toString(depth+1);
-								String fkName = fk.getName();
+								String parentRow = "rows" + Integer.toString(queryNo);
+								String fkRow = "rows" + Integer.toString(queryNoNext);
+								String fkName = fkObj.getName();
 								char fkChar = fkName.charAt(0);
 								String parName = d.getName();
 								char parChar = parName.charAt(0);
-								String queryFrom = lastQueryFrom + " " + fkName + " as " + fkChar + " inner join " + parName + " as " + parChar + " "; 
-								String queryWhere = lastQueryWhere + " " +  fkChar + ".id = " + parChar + "." + f.getName() + " and " + parChar + ".id = ?\";\n";
-								
+								String queryFrom = lastQueryFrom + " " + fkName + " as " + fkChar + " ";
+								String queryWhere = lastQueryWhere + " " +  fkChar + ".id = " + parChar + "." + f.getName();
+								if (queryNo == 0) {
+									queryFrom += " inner join " + parName + " as " + parChar + " "; 
+									queryWhere += " and " + parChar + ".id = ?";
+								}
 								s.append(returnTab(2+depth) + parentRow + ".forEach(function(row) { \n");
-								s.append(returnTab(3+depth) + "query = \""+ selectProperties(fk) + "\";\n");
-								s.append(returnTab(3+depth) + "query = \"from "+ queryFrom + "\";\n");
-								s.append(returnTab(3+depth) + "query = \"where "+ queryWhere + "\";\n");
+								s.append(returnTab(3+depth) + "query = \""+ selectProperties(fkObj) + "\";\n");
+								s.append(returnTab(3+depth) + "query += \"from "+ queryFrom + "\";\n");
+								s.append(returnTab(3+depth) + "query += \"where "+ queryWhere + "\";\n");
 								s.append(returnTab(3+depth) + "con.query(query, req.params.id, function(err, " + fkRow+",fields) {\n");
 								s.append(returnTab(4+depth) + "if (err) throw err;\n");
-								s.append(returnTab(4+depth) + "row." + fkName + " = " + fkRow+"[0];\n");
+								s.append(returnTab(4+depth) + "row." + f.getName()+ " = " + fkRow+"[0];\n");
 								
-								dataObjsMap.put(fkObj, Arrays.asList(queryFrom, queryWhere)); 
-								System.out.println(s.toString());
+								dataObjsMap.put(fkObj, Arrays.asList(queryFrom + " inner join ", queryWhere + " and ", Integer.toString(queryNoNext) )); 
+								depth+=2;
+								queryNoNext++;
+								
 							}
 						}
-						depth++;
 						
 						//first, evaluate all the foreign keys on the current object
 								
@@ -167,12 +190,12 @@
 				Iterator it = dataObjsMap.entrySet().iterator();
 				while(it.hasNext()){
 					Map.Entry one = (Map.Entry)it.next();
-					s.append(evaluateFK(((DataObj)one.getKey()), depth, ((List<String>)one.getValue()).get(0), ((List<String>)one.getValue()).get(1)));
-					s.append(returnTab(3+depth) + "});\n");
-					s.append(returnTab(2+depth) + "});\n");
+					s.append(evaluateFK(((DataObj)one.getKey()), depth, Integer.parseInt(((List<String>)one.getValue()).get(2)), queryNoNext, ((List<String>)one.getValue()).get(0), ((List<String>)one.getValue()).get(1)));
+					
 				}
-				System.out.println(s.toString());
-				return "";
+				
+				tabDepth = depth;
+				return s.toString();
 			}
 				
 			//	return "" + evaluateFK + (times depth)"});";
