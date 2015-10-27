@@ -4,7 +4,7 @@ VAR = ../config.json
 
 .SUFFIXES: .java .class
 .java.class:
-	$(JC) $*.java
+	$(JC) -Xlint:unchecked $*.java
 
 CLASSES = \
 	Field.java\

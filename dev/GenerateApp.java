@@ -15,11 +15,9 @@ public class GenerateApp {
 
 		//From the DataObjects
 		String sqldump = SqlGenerator.toSql(parser.getDataObjsMap()); //generate sqldump file
-		
 		System.out.println(sqldump);
 		
-		ApiCreator apiCreator = new ApiCreator();
-		System.out.println(apiCreator.createServerFile(parser.getDataObjsMap()));
+		ApiCreator.createServerFile(parser.getDataObjsMap());
 		
 	}
 
