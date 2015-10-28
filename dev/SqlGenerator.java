@@ -18,7 +18,6 @@ public class SqlGenerator{
         return s.toString();
     }
     public static String toSql(DataObj d){
-        System.out.println(d);
         StringBuilder s = new StringBuilder(1024);
         String name = d.getName();
         if(!d.isConverted()){

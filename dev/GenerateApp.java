@@ -19,6 +19,7 @@ public class GenerateApp {
 		
 		ApiCreator.createServerFile(parser.getDataObjsMap());
 		
+        System.out.println(parser.getPageObjsMap());
 	}
 
 }

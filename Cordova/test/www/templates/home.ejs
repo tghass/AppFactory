@@ -4,5 +4,22 @@
 </header>
 <div class="bar bar-standard bar-header-secondary">
     <input class='search-key' type="search"/>
+    <button id='search'>Search</button>
 </div>
-<div id="maincontent" class="content"></div>
+<div id="maincontent" class="content">
+    <ul class="table-view">
+        <% if(employees !== undefined){ %>
+            <% for(var i=0;i<employees.length; i++){ %>
+                <li class="table-view-cell media">
+                  <a href="#employees/<%=employees[i].id%>">
+                      <img class="media-object pull-left" src="assets/pics/<%=employees[i].pic%>">
+                      <div class="media-body">
+                          <%= employees[i].firstName +" "+ employees[i].lastName %>
+                          <p><%= employees[i].title %></p>
+                      </div>
+                  </a>
+                </li>
+            <% } %>
+        <% } %>
+    </ul>
+</div>

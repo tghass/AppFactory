@@ -12,6 +12,7 @@ public class Parser {
     //////////
     private HashMap<String,DataObj> dataObjsMap;
     private HashMap<String,Relation> relationsMap;
+    private HashMap<String,PageObj> pageObjMap;
     private ArrayList<String> imports;
 
     ////////////////
@@ -20,6 +21,7 @@ public class Parser {
     public Parser(){
         dataObjsMap = new HashMap<String,DataObj>();
         relationsMap = new HashMap<String,Relation>();
+        pageObjMap = new HashMap<String,PageObj>();
         imports = new ArrayList<String>();
     }
 
@@ -27,6 +29,7 @@ public class Parser {
     //Methods//
     ///////////
     public HashMap<String,DataObj> getDataObjsMap(){ return dataObjsMap;}
+    public HashMap<String,PageObj> getPageObjsMap(){ return pageObjMap;}
     /** Uses a StringBuilder to convert the file into a String and strip all comments */
     public String fileToString(String path) throws IOException{
         String match =  "//.*?\n" +"|"+ //Match single line comments
@@ -64,14 +67,68 @@ public class Parser {
             //Resolve realtions and fields
             resolveRealtions();
 
+            //Parse Pages
+            parsePages(pages);
+
+            //Parse Links
+            parseLinks(links);
+
             
         }catch(IOException e){
             System.err.println("Error opening up file!");
             e.printStackTrace();
         }
     }
+
+    public void parseLinks(JSONObject links){
+        Iterator<String> keys = links.keys();
+        while(keys.hasNext()){//Loop thruy all pages objs
+            String objName = (String)keys.next();
+            JSONObject obj = links.getJSONObject(objName);
+            assertTrue(obj.has("text"),"Link "+objName+" missing 'text'");
+            String text = obj.getString("text");
+            assertTrue(obj.has("destinationPage"),"Link "+objName+" missing 'destinationPage'");
+            String destPg = obj.getString("destinationPage");
+            //Add the info to the data obj
+            assertTrue(dataObjsMap.containsKey(objName),"No Data Object found by name: "+
+                    objName+", declared in links section\n");
+            DataObj d = dataObjsMap.get(objName);
+            d.addLink(text,destPg);
+        }
+    }
 	
-    
+    public void parsePages(JSONObject pages){
+        Iterator<String> keys = pages.keys();
+        while(keys.hasNext()){//Loop thruy all pages objs
+            String objName = (String)keys.next();
+
+            PageObj pageObj = new PageObj(objName);
+            pageObjMap.put(objName,pageObj);
+
+            JSONObject oneObj = pages.getJSONObject(objName);
+
+            //Parse Types
+            Iterator<String> fieldIt = oneObj.keys();
+            ArrayList<String> params = new ArrayList<String>();
+            ArrayList<String> show = new ArrayList<String>();
+            while(fieldIt.hasNext()){
+                String typeName = (String)fieldIt.next();
+                JSONObject oneSection = oneObj.getJSONObject(typeName);
+                assertTrue(oneSection.has("params"),"Page "+objName+", Section "+typeName+" missing 'params'");
+                JSONArray paramsJson = oneSection.getJSONArray("params");
+                assertTrue(oneSection.has("show"),"Page "+objName+", Section "+typeName+" missing 'show'");
+                JSONArray showJson = oneSection.getJSONArray("show");
+                //Add them to the ALs
+                for(int i=0; i<paramsJson.length(); i++){
+                    params.add(paramsJson.getString(i));
+                }
+                for(int i=0; i<showJson.length(); i++){
+                    show.add(showJson.getString(i));
+                }
+                pageObj.addSection(typeName,params,show);
+            }
+        }
+    }
     public void resolveRealtions(){
         //1) Resolve all fields of D.O.s and Relations
         Iterator it = dataObjsMap.entrySet().iterator();
@@ -134,7 +191,9 @@ public class Parser {
                     relationsMap.put(relationName,r);
                 }
             }
-            //TODO add SortBy option
+            if(oneObj.has("sortBy")){
+                dataObj.setSortBy(oneObj.getString("sortBy"));
+            }
         }
     }
     public void parseImports(JSONArray importsArr){
