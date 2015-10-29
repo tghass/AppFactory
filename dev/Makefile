@@ -4,12 +4,13 @@ VAR = ../config.json
 
 .SUFFIXES: .java .class
 .java.class:
-	$(JC) -Xlint:unchecked $*.java
+	$(JC) $*.java
 
 CLASSES = \
 	Field.java\
 	Relation.java\
 	DataObj.java\
+	PageObj.java\
 	Parser.java\
 	SqlGenerator.java\
 	GenerateApp.java\
