@@ -62,6 +62,7 @@ public class DataObj{
     public List<Field> getFields(){ return fields;}
     public List<DataObj> getDependencies(){ return dependencies;}
 	public List<String> getDisplay() { return display; }
+	
     @Override
     public String toString(){
         StringBuilder s = new StringBuilder(1024);
@@ -82,7 +83,7 @@ public class DataObj{
 
         return s.toString();
     }
-
+	
     public void resolve(HashMap<String,DataObj> dataObjsMap,HashMap<String,Relation> relationsMap){
         //Loop through all relations
         //Try to find the Relation with this name
