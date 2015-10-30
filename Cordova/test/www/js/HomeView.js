@@ -21,6 +21,17 @@ var HomeView = function(service) {
         });
     };
 	
+	this.addUser = function(e) {
+		e.preventDefault();
+		console.log('hur33');
+		var data = {'pictureurl': $("#pictureurl").val(),
+					'info' : $("#info").val(),
+					'name' : $("#name").val()};
+					
+		service.addUser(data).done(function(success) {
+			console.log('hhhhhhhhe');
+		});
+    };
 	
 
     this.initialize = function () {
@@ -28,6 +39,8 @@ var HomeView = function(service) {
         this.$el = $('<div/>');
         this.$el.on('click', '#search',this, this.findByName);//Attach a div class and method to the div wrapper
         this.findByName({data:this});
+		$(document).on('submit', 'form.new-employee', this.addUser);
+	
     };
 
     this.initialize();

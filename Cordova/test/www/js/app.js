@@ -24,16 +24,38 @@ function loginHandler(r){
     var service = new EmployeeService();
 
     service.initialize().done(function () {
-        router.addRoute('', function() {
+        
+		router.addRoute('', function() {
             $('body').html(new HomeView(service).render().$el);
         });
-
-        router.addRoute('employees/:id', function(id) {
+        
+		router.addRoute('employees/:id', function(id) {
             service.findById(parseInt(id)).done(function(employee) {
                 $('body').html(new EmployeeView(employee).render().$el);
-            });
+			});
         });
-
+		
+		//use: type in localhost:8080/index.html#employee/find/9
+		router.addRoute('/employee/find/:id', function(id) {
+			console.log('here');
+			service.findById(parseInt(id)).done(function(employee) {
+				$('body').html("<div>"+JSON.stringify(employee)+"</div>");
+			});
+		});
+		
+		/*router.addRoute('user/add', function() {
+			console.log('in add route');
+			service.addUser().done(function(success) {
+				if (success) {
+					$('body').html("<div>Succesfully Added</div>");
+				}
+				else {
+					$('body').html("Failed");
+				}
+			});
+		});*/
+		
+		
         router.start();
     });
 
