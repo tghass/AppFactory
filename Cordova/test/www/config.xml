@@ -7,7 +7,6 @@
         version   = "1.0.0">
 
     <name>HelloJS</name>
-
     <description>
         HelloJS demo implenting thirdparty SDK's into phonegap
     </description>

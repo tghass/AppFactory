@@ -29,6 +29,10 @@ function loginHandler(r){
             $('body').html(new HomeView(service).render().$el);
         });
         
+		router.addRoute('change', function() {
+            $('body').html(new CrudView(service).render().$el);
+        });
+        
 		router.addRoute('employees/:id', function(id) {
             service.findById(parseInt(id)).done(function(employee) {
                 $('body').html(new EmployeeView(employee).render().$el);
