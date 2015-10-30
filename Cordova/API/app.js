@@ -74,9 +74,14 @@ app.post('/User/add', function (req, res) {
 //DELETE 
 app.get('/User/delete/:id', function(req,res,next) {
 	var id = req.params.id;
-	con.query("DELETE FROM User WHERE id = ?", [id], function(err, rows) {
+	console.log(id);
+	con.query("DELETE FROM User WHERE id = ?", id, function(err, rows) {
 		if (err) { console.log('Error deleting');}
-		res.redirect('/');
+		else {
+			console.log('in success del');
+			console.log(rows);
+			res.jsonp(rows);
+		}
 	});
 });
 
@@ -84,6 +89,8 @@ app.get('/User/delete/:id', function(req,res,next) {
 app.post('/User/update/:id', function(req,res,next) {
 	var id = req.params.id;
 	var user = '';
+	console.log('id');
+	console.log(req.params);
     req.on('data', function(data) {
         user += data;
     });
@@ -99,7 +106,7 @@ app.post('/User/update/:id', function(req,res,next) {
 		con.query("UPDATE User set ? WHERE id = ?", [data,id], function(err, rows) {
 			if (err) { console.log('insert err'); console.log(err); }
 			else { 
-				console.log('in successquery');
+				console.log('in success UPDATE');
 				res.sendStatus(200); 
 			}
 		});
