@@ -17,13 +17,19 @@ public class ApiCreator {
         Iterator it = dataObjsMap.entrySet().iterator();
         while(it.hasNext()){
             Map.Entry one = (Map.Entry)it.next();
-            s.append(genGetById((DataObj)one.getValue()));
+			DataObj curDataObj = (DataObj)one.getValue();
+			String name = curDataObj.getName();
+			s.append("\n /* " + name + ": CRUD GET, DELETE, UPDATE, POST */\n");
+            s.append(genGetById(curDataObj));
+			s.append(genDelById(curDataObj));
+			s.append(genUpdateById(curDataObj));
+			s.append(genAdd(curDataObj));
         }
-		s.append(genListen());
-		System.out.println(s.toString());
+		s.append(genServerListen());
+		//System.out.println(s.toString());
         return s.toString();
     }
-	public static String genListen() {
+	public static String genServerListen() {
 		StringBuilder s = new StringBuilder(1024);
 		s.append("var server = app.listen(3000, function() {\n");
 		s.append("\tconsole.log('We have started our server"
@@ -63,7 +69,101 @@ public class ApiCreator {
 		
         return s.toString();
     }
+	//Generate an update by id call for a table.
+	// TODO: right now, it updates all fields except id
+	// this should be changed based off of what fields
+	// the config file specifies can/should be updated
+	public static String genUpdateById(DataObj dataObj) {
+		StringBuilder s = new StringBuilder(1024);
+        String tableName = dataObj.getName();
+        s.append("app.post('/" + tableName 
+				 + "/update/:id', function(req,res,next) {\n");
+		s.append(returnTab(1) + "var id = req.params.id;\n");
+		s.append(returnTab(1) + "var " + tableName + " = '';\n");
+		s.append(returnTab(1) + "req.on('data', function(data) {\n");
+		s.append(returnTab(2) + tableName + " += data;\n");
+		s.append(returnTab(1) + "});\n");
+		s.append(returnTab(1) + "req.on('end', function() {\n");
+		s.append(returnTab(2) + tableName + " = JSON.parse(" + tableName + ");\n");
+		s.append(toJsonObj(dataObj));
+		s.append(returnTab(2) + "con.query('UPDATE " + tableName
+							  + " set ? WHERE id = ?', [data, id]," 
+							  + "function(err,rows) {\n");
+		s.append(returnTab(3) + "if (err) { console.log('Error updating'); }\n");
+		s.append(returnTab(3) + "else {\n");
+		s.append(returnTab(4) + "console.log('in update success');\n");
+		s.append(returnTab(4) + "res.sendStatus(200);\n"); //TODO: return something else
+		s.append(returnTab(3) + "}\n");
+		s.append(returnTab(2) + "});\n");
+		s.append(returnTab(1) + "});\n");
+		s.append("});\n\n");
+		return s.toString();
+	}
+	
+		//Generate an add by id call for a table.
+	public static String genAdd(DataObj dataObj) {
+		StringBuilder s = new StringBuilder(1024);
+        String tableName = dataObj.getName();
+        s.append("app.post('/" + tableName + "/add', function(req,res) {\n");
+		s.append(returnTab(1) + "var " + tableName + " = '';\n");
+		s.append(returnTab(1) + "req.on('data', function(data) {\n");
+		s.append(returnTab(2) + tableName + " += data;\n");
+		s.append(returnTab(1) + "});\n");
+		s.append(returnTab(1) + "req.on('end', function() {\n");
+		s.append(returnTab(2) + tableName + " = JSON.parse(" + tableName + ");\n");
 
+		s.append(toJsonObj(dataObj));
+		s.append(returnTab(2) + "con.query('INSERT INTO " + tableName 
+				+ " set ? ', data, function(err,rows) {\n");
+		s.append(returnTab(3) + "if (err) { console.log('Error inserting'); }\n");
+		s.append(returnTab(3) + "else {\n");
+		s.append(returnTab(4) + "console.log('in insert success');\n");
+		s.append(returnTab(4) + "res.sendStatus(200);\n"); //TODO: return something else
+		s.append(returnTab(3) + "}\n");
+		s.append(returnTab(2) + "});\n");
+		s.append(returnTab(1) + "});\n");
+		s.append("});\n\n");
+		return s.toString();
+	}
+	
+	public static String toJsonObj(DataObj d){
+		StringBuilder s = new StringBuilder(1024);
+        s.append(returnTab(2) + "var data = {\n");
+	    String name = d.getName();
+        boolean firstField = true;
+        for (Field f: d.getFields()) {
+			//update will not change the auto-created id
+			if (f.getName().equals("ID")) { continue; }
+            if (firstField) {
+                firstField = false;
+                s.append(returnTab(3) + f.getName() + " : " 
+						+ name + "." + f.getName() +" ");
+            }
+            else {
+                s.append(",\n" + returnTab(3) + f.getName() + " : " 
+						+ name + "." + f.getName() +" ");
+            }
+        }
+		s.append("\n" + returnTab(2) + "};\n");
+        return s.toString();
+    }
+	
+	//Generate a delete by id call for a table.
+	public static String genDelById(DataObj dataObj) {
+		StringBuilder s = new StringBuilder(1024);
+        String tableName = dataObj.getName();
+        s.append("app.get('/" + tableName + "/delete/:id', function(req,res,next) {\n");
+		s.append(returnTab(1) + "var id = req.params.id;\n");
+		s.append(returnTab(1) + "con.query('DELETE FROM " + tableName +" WHERE id = ?', id, function(err,rows) {\n");
+		s.append(returnTab(2) + "if (err) { console.log('Error deleting'); }\n");
+		s.append(returnTab(2) + "else {\n");
+		s.append(returnTab(3) + "console.log('in delete success');\n");
+		s.append(returnTab(3) + "res.jsonp(rows);\n"); //TODO: return something else
+		s.append(returnTab(2) + "}\n");
+		s.append(returnTab(1) + "});\n");
+		s.append("});\n\n");
+		return s.toString();
+	}
     
     //Generate a get by id call for every table.
     //For the tables with foreign keys, this calls function
@@ -71,30 +171,14 @@ public class ApiCreator {
     public static String genGetById(DataObj dataObj){
         StringBuilder s = new StringBuilder(1024);
         String tableName = dataObj.getName();
-        List<String> displayFields = dataObj.getDisplay();
-        StringBuilder fieldList = new StringBuilder(1024);
-        boolean firstElt = true;
-        for(String field: dataObj.getDisplay()) {
-            // not looking for string values, only looking for
-            // fields in the table
-            if (field.contains("@")) { continue; } //TODO, check if the first char is @ only?
-
-            // ensures the commas are placed appropriately
-            if (firstElt) {
-                fieldList.append(field);
-                firstElt = false;
-            }
-            else {
-                fieldList.append(", " +field);
-            }
-        }
+       
         s.append("app.get('/" + tableName + "/find/:id', function(req,res) {\n");
 		
 		//generates the BASIC select * from table where id = ?
-        s.append("\tvar query = \""+ selectProperties(dataObj) + 
+        s.append(returnTab(1) + "var query = \""+ selectProperties(dataObj) + 
 				" from " + tableName + " as " +tableName+ " where id = ?\";\n");
-        s.append("\tcon.query(query, req.params.id, function(err, rows0,fields) {\n");
-        s.append("\t\tif(err) throw err;\n");
+        s.append(returnTab(1) + "con.query(query, req.params.id, function(err, rows0,fields) {\n");
+        s.append(returnTab(2) +"if(err) throw err;\n");
 
 		//once the BASIC info is returned, each foreign key needs to be 
 		//expanded. this is done recursively with evaluateFK()
@@ -151,8 +235,7 @@ public class ApiCreator {
     public static String evaluateFK(DataObj d, int depth, String lastQueryFrom, String lastQueryWhere) {
         StringBuilder s = new StringBuilder(4028);
         HashMap<DataObj, List<String>> dataObjsMap = new HashMap<DataObj, List<String>>(); 
-		
-        //First, evaluate all the foreign keys on the current object
+		//First, evaluate all the foreign keys on the current object
         for (Field f : d.getFields()) {
             if (f.getType() == Field.Type.FOREIGN_KEY) {	
                 // get the object corresponding to the foreign key field str
@@ -203,6 +286,7 @@ public class ApiCreator {
                         dataObjsMap.put(fkObj, a); 
                         depth+=2;
                         queryNoNext++;
+						break;
                     }
                 }
             }
@@ -226,7 +310,6 @@ public class ApiCreator {
 			//why are we parsing ints? Need to parse the int because
 			//[2] queryNo is an int
 			queryNo = Integer.parseInt(values.get(2));
-			
 			s.append(evaluateFK(key,depth,(String)values.get(0), (String)values.get(1)));
         }
         if (depth > tabDepth) {tabDepth = depth;}

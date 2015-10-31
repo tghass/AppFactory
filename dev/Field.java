@@ -70,8 +70,8 @@ public class Field{
     public String getName(){return name;}
     public String getTypeStr(){return typeStr;}
     public Type getType(){return type;}
-
-    @Override
+   
+	@Override
     public String toString(){
         return "("+name+" of type "+type.name()+")";
     }

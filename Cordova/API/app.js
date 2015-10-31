@@ -3,24 +3,6 @@
 var express = require('express');
 var app = express();
 
-//Important to make POST work
-// npm install express-cors 
-var cors = require('express-cors')
- 
-app.use(function(req,res, next) {
-	res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    res.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-    res.header("Access-Control-Max-Age", "1000"); 
-    cors({
-		allowedOrigins: [
-			'localhost:8080'
-		]
-	});
-	next();
-});
-
-
 //Establish connection to the MySQL database
 var mysql = require('mysql');
 var con = mysql.createConnection({
@@ -38,84 +20,8 @@ con.connect(function(err) {
 	});
 
 
-
-
-
-//POST REQUESTS
-
-
-app.post('/User/add', function (req, res) {
-    console.log('made it to post');
-	var user = '';
-    req.on('data', function(data) {;
-		
-        user += data;
-    });
-	req.on('end', function() {
-		user = JSON.parse(user);
-		var data = {
-			PictureUrl : user.pictureurl,
-			Info : user.info,
-			Name : user.name
-		};
-		console.log('data');
-		console.log(data);
-		con.query("INSERT INTO User set ? ", data, function(err, rows) {
-			if (err) { console.log('insert err'); console.log(err); }
-			else { 
-				console.log('in successquery');
-				res.sendStatus(200); 
-			}
-		});
-});
-   
-	
-});
-//DELETE 
-app.get('/User/delete/:id', function(req,res,next) {
-	var id = req.params.id;
-	console.log(id);
-	con.query("DELETE FROM User WHERE id = ?", id, function(err, rows) {
-		if (err) { console.log('Error deleting');}
-		else {
-			console.log('in success del');
-			console.log(rows);
-			res.jsonp(rows);
-		}
-	});
-});
-
-//UPDATE
-app.post('/User/update/:id', function(req,res,next) {
-	var id = req.params.id;
-	var user = '';
-	console.log('id');
-	console.log(req.params);
-    req.on('data', function(data) {
-        user += data;
-    });
-	req.on('end', function() {
-		user = JSON.parse(user);
-		var data = {
-			PictureUrl : user.pictureurl,
-			Info : user.info,
-			Name : user.name
-		};
-		console.log('data');
-		console.log(data);
-		con.query("UPDATE User set ? WHERE id = ?", [data,id], function(err, rows) {
-			if (err) { console.log('insert err'); console.log(err); }
-			else { 
-				console.log('in success UPDATE');
-				res.sendStatus(200); 
-			}
-		});
-	});
-});
-
-
-//GET REQUESTS
-app.get('/Friendship/find/:id', function(req,res,next) {
+ /* Friendship: CRUD GET, DELETE, UPDATE, POST */
+app.get('/Friendship/find/:id', function(req,res) {
 	var query = "select Friendship.ID , Friendship.BeganDate , Friendship.Friendship1 , Friendship.Friendship2  from Friendship as Friendship where id = ?";
 	con.query(query, req.params.id, function(err, rows0,fields) {
 		if(err) throw err;
@@ -129,29 +35,11 @@ app.get('/Friendship/find/:id', function(req,res,next) {
 				rows0.forEach(function(row) { 
 					query = "select User.ID , User.PictureUrl , User.Info , User.Name ";
 					query += "from  User as User  inner join Friendship as Friendship ";
-					query += "where  User.id = Friendship.Friendship1 and Friendship.id = ?";
+					query += "where  User.id = Friendship.Friendship2 and Friendship.id = ?";
 					con.query(query, req.params.id, function(err, rows2,fields) {
 						if (err) throw err;
-						row.Friendship1 = rows2[0];
-						rows0.forEach(function(row) { 
-							query = "select User.ID , User.PictureUrl , User.Info , User.Name ";
-							query += "from  User as User  inner join Friendship as Friendship ";
-							query += "where  User.id = Friendship.Friendship2 and Friendship.id = ?";
-							con.query(query, req.params.id, function(err, rows3,fields) {
-								if (err) throw err;
-								row.Friendship2 = rows3[0];
-								rows0.forEach(function(row) { 
-									query = "select User.ID , User.PictureUrl , User.Info , User.Name ";
-									query += "from  User as User  inner join Friendship as Friendship ";
-									query += "where  User.id = Friendship.Friendship2 and Friendship.id = ?";
-									con.query(query, req.params.id, function(err, rows4,fields) {
-										if (err) throw err;
-										row.Friendship2 = rows4[0];
-										res.jsonp(rows0);
-									});
-								});
-							});
-						});
+						row.Friendship2 = rows2[0];
+						res.jsonp(rows0);
 					});
 				});
 			});
@@ -159,6 +47,64 @@ app.get('/Friendship/find/:id', function(req,res,next) {
 	});
 });
 
+app.get('/Friendship/delete/:id', function(req,res,next) {
+	var id = req.params.id;
+	con.query('DELETE FROM Friendship WHERE id = ?', id, function(err,rows) {
+		if (err) { console.log('Error deleting'); }
+		else {
+			console.log('in delete success');
+			res.jsonp(rows);
+		}
+	});
+});
+
+app.post('/Friendship/update/:id', function(req,res,next) {
+	var id = req.params.id;
+	var Friendship = '';
+	req.on('data', function(data) {
+		Friendship += data;
+	});
+	req.on('end', function() {
+		Friendship = JSON.parse(Friendship);
+		var data = {
+			BeganDate : Friendship.BeganDate ,
+			Friendship1 : Friendship.Friendship1 ,
+			Friendship2 : Friendship.Friendship2 
+		};
+		con.query('UPDATE Friendship set ? WHERE id = ?', [data, id],function(err,rows) {
+			if (err) { console.log('Error updating'); }
+			else {
+				console.log('in update success');
+				res.sendStatus(200);
+			}
+		});
+	});
+});
+
+app.post('/Friendship/add', function(req,res) {
+	var Friendship = '';
+	req.on('data', function(data) {
+		Friendship += data;
+	});
+	req.on('end', function() {
+		Friendship = JSON.parse(Friendship);
+		var data = {
+			BeganDate : Friendship.BeganDate ,
+			Friendship1 : Friendship.Friendship1 ,
+			Friendship2 : Friendship.Friendship2 
+		};
+		con.query('INSERT INTO Friendship set ? ', data, function(err,rows) {
+			if (err) { console.log('Error inserting'); }
+			else {
+				console.log('in insert success');
+				res.sendStatus(200);
+			}
+		});
+	});
+});
+
+
+ /* Comment: CRUD GET, DELETE, UPDATE, POST */
 app.get('/Comment/find/:id', function(req,res) {
 	var query = "select Comment.ID , Comment.CreatedBy , Comment.Content , Comment.CreateDate , Comment.PostTo  from Comment as Comment where id = ?";
 	con.query(query, req.params.id, function(err, rows0,fields) {
@@ -194,6 +140,66 @@ app.get('/Comment/find/:id', function(req,res) {
 	});
 });
 
+app.get('/Comment/delete/:id', function(req,res,next) {
+	var id = req.params.id;
+	con.query('DELETE FROM Comment WHERE id = ?', id, function(err,rows) {
+		if (err) { console.log('Error deleting'); }
+		else {
+			console.log('in delete success');
+			res.jsonp(rows);
+		}
+	});
+});
+
+app.post('/Comment/update/:id', function(req,res,next) {
+	var id = req.params.id;
+	var Comment = '';
+	req.on('data', function(data) {
+		Comment += data;
+	});
+	req.on('end', function() {
+		Comment = JSON.parse(Comment);
+		var data = {
+			CreatedBy : Comment.CreatedBy ,
+			Content : Comment.Content ,
+			CreateDate : Comment.CreateDate ,
+			PostTo : Comment.PostTo 
+		};
+		con.query('UPDATE Comment set ? WHERE id = ?', [data, id],function(err,rows) {
+			if (err) { console.log('Error updating'); }
+			else {
+				console.log('in update success');
+				res.sendStatus(200);
+			}
+		});
+	});
+});
+
+app.post('/Comment/add', function(req,res) {
+	var Comment = '';
+	req.on('data', function(data) {
+		Comment += data;
+	});
+	req.on('end', function() {
+		Comment = JSON.parse(Comment);
+		var data = {
+			CreatedBy : Comment.CreatedBy ,
+			Content : Comment.Content ,
+			CreateDate : Comment.CreateDate ,
+			PostTo : Comment.PostTo 
+		};
+		con.query('INSERT INTO Comment set ? ', data, function(err,rows) {
+			if (err) { console.log('Error inserting'); }
+			else {
+				console.log('in insert success');
+				res.sendStatus(200);
+			}
+		});
+	});
+});
+
+
+ /* User: CRUD GET, DELETE, UPDATE, POST */
 app.get('/User/find/:id', function(req,res) {
 	var query = "select User.ID , User.PictureUrl , User.Info , User.Name  from User as User where id = ?";
 	con.query(query, req.params.id, function(err, rows0,fields) {
@@ -202,6 +208,64 @@ app.get('/User/find/:id', function(req,res) {
 	});
 });
 
+app.get('/User/delete/:id', function(req,res,next) {
+	var id = req.params.id;
+	con.query('DELETE FROM User WHERE id = ?', id, function(err,rows) {
+		if (err) { console.log('Error deleting'); }
+		else {
+			console.log('in delete success');
+			res.jsonp(rows);
+		}
+	});
+});
+
+app.post('/User/update/:id', function(req,res,next) {
+	var id = req.params.id;
+	var User = '';
+	req.on('data', function(data) {
+		User += data;
+	});
+	req.on('end', function() {
+		User = JSON.parse(User);
+		var data = {
+			PictureUrl : User.PictureUrl ,
+			Info : User.Info ,
+			Name : User.Name 
+		};
+		con.query('UPDATE User set ? WHERE id = ?', [data, id],function(err,rows) {
+			if (err) { console.log('Error updating'); }
+			else {
+				console.log('in update success');
+				res.sendStatus(200);
+			}
+		});
+	});
+});
+
+app.post('/User/add', function(req,res) {
+	var User = '';
+	req.on('data', function(data) {
+		User += data;
+	});
+	req.on('end', function() {
+		User = JSON.parse(User);
+		var data = {
+			PictureUrl : User.PictureUrl ,
+			Info : User.Info ,
+			Name : User.Name 
+		};
+		con.query('INSERT INTO User set ? ', data, function(err,rows) {
+			if (err) { console.log('Error inserting'); }
+			else {
+				console.log('in insert success');
+				res.sendStatus(200);
+			}
+		});
+	});
+});
+
+
+ /* Post: CRUD GET, DELETE, UPDATE, POST */
 app.get('/Post/find/:id', function(req,res) {
 	var query = "select Post.ID , Post.CreatedBy , Post.Content , Post.CreateDate  from Post as Post where id = ?";
 	con.query(query, req.params.id, function(err, rows0,fields) {
@@ -215,6 +279,62 @@ app.get('/Post/find/:id', function(req,res) {
 				row.CreatedBy = rows1[0];
 				res.jsonp(rows0);
 			});
+		});
+	});
+});
+
+app.get('/Post/delete/:id', function(req,res,next) {
+	var id = req.params.id;
+	con.query('DELETE FROM Post WHERE id = ?', id, function(err,rows) {
+		if (err) { console.log('Error deleting'); }
+		else {
+			console.log('in delete success');
+			res.jsonp(rows);
+		}
+	});
+});
+
+app.post('/Post/update/:id', function(req,res,next) {
+	var id = req.params.id;
+	var Post = '';
+	req.on('data', function(data) {
+		Post += data;
+	});
+	req.on('end', function() {
+		Post = JSON.parse(Post);
+		var data = {
+			CreatedBy : Post.CreatedBy ,
+			Content : Post.Content ,
+			CreateDate : Post.CreateDate 
+		};
+		con.query('UPDATE Post set ? WHERE id = ?', [data, id],function(err,rows) {
+			if (err) { console.log('Error updating'); }
+			else {
+				console.log('in update success');
+				res.sendStatus(200);
+			}
+		});
+	});
+});
+
+app.post('/Post/add', function(req,res) {
+	var Post = '';
+	req.on('data', function(data) {
+		Post += data;
+	});
+	req.on('end', function() {
+		Post = JSON.parse(Post);
+		var data = {
+			CreatedBy : Post.CreatedBy ,
+			Content : Post.Content ,
+			CreateDate : Post.CreateDate 
+		};
+		con.query('INSERT INTO Post set ? ', data, function(err,rows) {
+			if (err) { console.log('Error inserting'); }
+			else {
+				console.log('in insert success');
+				res.sendStatus(200);
+			}
 		});
 	});
 });
@@ -238,7 +358,6 @@ app.get('/employee/find/name/:name', function(req,res) {
 				res.jsonp(rows);
 	});
 });
-
 
 
 var server = app.listen(3000, function() {
