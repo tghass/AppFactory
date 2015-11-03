@@ -52,7 +52,7 @@ public class ApiCreator {
 	}
 	
     public String genDbConnection() {
-        StringBuilder s = new StringBuilder(4096); //TODO: change this #
+        StringBuilder s = new StringBuilder(1024);
         s.append("//Express is a minimal and flexible Node.js web " 
 				+ "application framework that provides a robust set of features" 
 				+ "for web and mobile applications\n");
@@ -76,7 +76,7 @@ public class ApiCreator {
         s.append("\t\treturn;\n");
         s.append("\t}\n");
         s.append("\tconsole.log('Connection established.');\n");
-        s.append("\t});\n");
+        s.append("});\n");
         s.append("\n");
 		
 		

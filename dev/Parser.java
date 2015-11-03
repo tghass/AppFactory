@@ -37,7 +37,7 @@ public class Parser {
         Pattern p = Pattern.compile(match,Pattern.DOTALL | Pattern.MULTILINE);
         Scanner reader = new Scanner(new File(path)).useDelimiter(p);
 
-        StringBuilder s = new StringBuilder(1024);
+        StringBuilder s = new StringBuilder(16384);
         while(reader.hasNext()){
             s.append(reader.next());
             s.append("\n");
@@ -82,7 +82,7 @@ public class Parser {
 
     public void parseLinks(JSONObject links){
         Iterator<String> keys = links.keys();
-        while(keys.hasNext()){//Loop thruy all pages objs
+        while(keys.hasNext()){//Loop thru all pages objs
             String objName = (String)keys.next();
             JSONObject obj = links.getJSONObject(objName);
             assertTrue(obj.has("text"),"Link "+objName+" missing 'text'");
@@ -152,6 +152,21 @@ public class Parser {
                 System.exit(1);
             }
         }
+
+        //3 Confirm no name overlap between Fields and Relations
+        it = dataObjsMap.entrySet().iterator();
+        while(it.hasNext()){
+            Map.Entry one = (Map.Entry)it.next();
+            String name = (String)one.getKey();
+            DataObj data = (DataObj)one.getValue();
+            List<Field> fields = data.getFields();
+            for(Field f : fields){
+                assertTrue(!relationsMap.containsKey(f.getName()),
+                        "Data Object "+name+" cannot contain a Relation and a Fields by the same name"
+                        );
+            }
+        }
+
     }
     /* Parse the JSONObject data field and add it to the HashMap */
     public void parseData(JSONObject data){

@@ -1,6 +1,7 @@
 public class Relation{
     //TODO:
     // - Deal with cases of a&b being same/different objs
+    // I think we will deal with this in the Creator/Generator classes
 
     //////////
     //Fields//

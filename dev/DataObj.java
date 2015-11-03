@@ -1,10 +1,7 @@
 import java.util.*;
 public class DataObj{
     //TODO : 
-    // - Verify no name overlap between Field and Relation
-    // - Do this with a static map/table
-    // - Add boolean field (converted) that tells if it has been turned into SQL
-    //  - What about circular relationships
+    //  - What about circular relationships. Is this even an issue?
 
     //////////
     //Fields//

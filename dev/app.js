@@ -16,7 +16,7 @@ con.connect(function(err) {
 		return;
 	}
 	console.log('Connection established.');
-	});
+});
 
 
  /* Friendship: CRUD GET, DELETE, UPDATE, POST */
