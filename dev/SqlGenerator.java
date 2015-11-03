@@ -1,39 +1,54 @@
 import java.util.*;
+import java.io.*;
 public class SqlGenerator{
     public static final String DEFAULTS = "DEFAULT NULL";
     public static final String DEFAULTS_ID = "INT(12) NOT NULL AUTO_INCREMENT";
+    public static final String tempDBName = "TemporaryDbName";
+
+    //////////
+    //Fields//
+    //////////
+    private PrintWriter out;
+
+
+    ////////////////
+    //Constructors//
+    ////////////////
+    /** Constructor for SqlGenerator */
+    public SqlGenerator(PrintWriter out){
+        this.out=out;
+    }
 
     ///////////
     //Methods//
     ///////////
-	public static String toSql(HashMap<String,DataObj> dataObjsMap){
-        StringBuilder s = new StringBuilder(4096);
-        s.append("CREATE DATABASE  IF NOT EXISTS `").append("DBNAME").append("`;\n");
-        s.append("USE `").append("DBNAME").append("`;\n");
+	public void toSql(HashMap<String,DataObj> dataObjsMap){
+        out.write("CREATE DATABASE  IF NOT EXISTS `"+tempDBName+"`;\n");
+        out.write("USE `"+tempDBName+"`;\n");
         Iterator it = dataObjsMap.entrySet().iterator();
         while(it.hasNext()){
             Map.Entry one = (Map.Entry)it.next();
-            s.append(SqlGenerator.toSql(((DataObj)one.getValue())));
+            out.write(toSql(((DataObj)one.getValue())));
         }
-        return s.toString();
+        out.flush();
     }
-    public static String toSql(DataObj d){
+    private String toSql(DataObj d){
         StringBuilder s = new StringBuilder(1024);
         String name = d.getName();
         if(!d.isConverted()){
             //Do all dependecies first
             for(DataObj obj: d.getDependencies()){
-                s.append(SqlGenerator.toSql(obj));
+                s.append(toSql(obj));
             }
             //Now this one
             s.append("DROP TABLE IF EXISTS `").append(name).append("`;\n");
             s.append("CREATE TABLE `").append(name).append("`(\n");
                 for(Field f : d.getFields()){//Add fields
-                    s.append("").append(SqlGenerator.toSql(f));
+                    s.append(toSql(f));
                 }
                 s.append("  PRIMARY KEY (`").append(DataObj.ID).append("`),\n");
                 for(Field f : d.getFields()){//Add foreign keys
-                    s.append("").append(SqlGenerator.foreignKeySql(f));
+                    s.append(foreignKeySql(f));
                 }
             s.setCharAt(s.lastIndexOf(","),' ');
             s.append(");\n");
@@ -41,7 +56,7 @@ public class SqlGenerator{
         }
         return s.toString();
     }
-    public static String toSql(Field f){
+    private String toSql(Field f){
         StringBuilder s = new StringBuilder(512);
         s.append("  `").append(f.getName()).append("` ");    //`field`
         if(f.getType() == Field.Type.PRIMARY_KEY){//The ID field
@@ -54,7 +69,7 @@ public class SqlGenerator{
         s.append(",\n");                            //Add comma and new line
         return s.toString();
     }
-    public static String foreignKeySql(Field f){
+    private String foreignKeySql(Field f){
         if(f.getType() == Field.Type.FOREIGN_KEY){
             StringBuilder s = new StringBuilder(512);
             s.append("  FOREIGN KEY (`").append(f.getName()).append("`)\n");
@@ -66,7 +81,7 @@ public class SqlGenerator{
         }
         return "";
     }
-    private static String typeToSql(Field.Type t){
+    private String typeToSql(Field.Type t){
         switch (t){
             case DATE:
                 return "DATE";

@@ -1,35 +1,48 @@
-
+import java.io.*;
 import java.util.*;
 
 //Generates API following CRUD operations
 
 public class ApiCreator {
 
+    //////////
+    //Fields//
+    //////////
     public static int tabDepth = 0;
     public static int queryNo = 0;
     public static int queryNoNext = 1;
 
-    public static String createServerFile(HashMap<String,DataObj> dataObjsMap){
-        StringBuilder s = new StringBuilder(4096); //TODO: change this #
-       
-        s.append(genDbConnection());
+    private PrintWriter out;
+
+
+    ////////////////
+    //Constructors//
+    ////////////////
+    /** Constructor for ApiCreator */
+    public ApiCreator(PrintWriter out){
+        this.out=out;
+    }
+
+    ///////////
+    //Methods//
+    ///////////
+    public void createServerFile(HashMap<String,DataObj> dataObjsMap){
+        out.write(genDbConnection());
         //For each data object, get object by ID
         Iterator it = dataObjsMap.entrySet().iterator();
         while(it.hasNext()){
             Map.Entry one = (Map.Entry)it.next();
 			DataObj curDataObj = (DataObj)one.getValue();
 			String name = curDataObj.getName();
-			s.append("\n /* " + name + ": CRUD GET, DELETE, UPDATE, POST */\n");
-            s.append(genGetById(curDataObj));
-			s.append(genDelById(curDataObj));
-			s.append(genUpdateById(curDataObj));
-			s.append(genAdd(curDataObj));
+			out.write("\n /* " + name + ": CRUD GET, DELETE, UPDATE, POST */\n");
+            out.write(genGetById(curDataObj));
+			out.write(genDelById(curDataObj));
+			out.write(genUpdateById(curDataObj));
+			out.write(genAdd(curDataObj));
         }
-		s.append(genServerListen());
-		//System.out.println(s.toString());
-        return s.toString();
+		out.write(genServerListen());
     }
-	public static String genServerListen() {
+	public String genServerListen() {
 		StringBuilder s = new StringBuilder(1024);
 		s.append("var server = app.listen(3000, function() {\n");
 		s.append("\tconsole.log('We have started our server"
@@ -38,7 +51,7 @@ public class ApiCreator {
 		return s.toString();
 	}
 	
-    public static String genDbConnection() {
+    public String genDbConnection() {
         StringBuilder s = new StringBuilder(4096); //TODO: change this #
         s.append("//Express is a minimal and flexible Node.js web " 
 				+ "application framework that provides a robust set of features" 
@@ -73,7 +86,7 @@ public class ApiCreator {
 	// TODO: right now, it updates all fields except id
 	// this should be changed based off of what fields
 	// the config file specifies can/should be updated
-	public static String genUpdateById(DataObj dataObj) {
+	public String genUpdateById(DataObj dataObj) {
 		StringBuilder s = new StringBuilder(1024);
         String tableName = dataObj.getName();
         s.append("app.post('/" + tableName 
@@ -101,7 +114,7 @@ public class ApiCreator {
 	}
 	
 		//Generate an add by id call for a table.
-	public static String genAdd(DataObj dataObj) {
+	public String genAdd(DataObj dataObj) {
 		StringBuilder s = new StringBuilder(1024);
         String tableName = dataObj.getName();
         s.append("app.post('/" + tableName + "/add', function(req,res) {\n");
@@ -126,7 +139,7 @@ public class ApiCreator {
 		return s.toString();
 	}
 	
-	public static String toJsonObj(DataObj d){
+	public String toJsonObj(DataObj d){
 		StringBuilder s = new StringBuilder(1024);
         s.append(returnTab(2) + "var data = {\n");
 	    String name = d.getName();
@@ -149,7 +162,7 @@ public class ApiCreator {
     }
 	
 	//Generate a delete by id call for a table.
-	public static String genDelById(DataObj dataObj) {
+	public String genDelById(DataObj dataObj) {
 		StringBuilder s = new StringBuilder(1024);
         String tableName = dataObj.getName();
         s.append("app.get('/" + tableName + "/delete/:id', function(req,res,next) {\n");
@@ -168,7 +181,7 @@ public class ApiCreator {
     //Generate a get by id call for every table.
     //For the tables with foreign keys, this calls function
     // genGetByForeignKey 
-    public static String genGetById(DataObj dataObj){
+    public String genGetById(DataObj dataObj){
         StringBuilder s = new StringBuilder(1024);
         String tableName = dataObj.getName();
        
@@ -200,7 +213,7 @@ public class ApiCreator {
     }
 
 	//generates the number of tabs the line needs
-    public static String returnTab(int depth) {
+    public String returnTab(int depth) {
         StringBuilder s = new StringBuilder(128);
         for (int i = 0; i < depth; i++) {
             s.append("\t");
@@ -209,7 +222,7 @@ public class ApiCreator {
     }
 
 	//generates the 'select' part of the SQL select statement
-    public static String selectProperties(DataObj d) {
+    public String selectProperties(DataObj d) {
         StringBuilder s = new StringBuilder(1024);
         String name = d.getName();
         s.append("select ");
@@ -232,7 +245,7 @@ public class ApiCreator {
 	// DataObj d - data object that's foreign keys are being expanded from ids to JSON objects
 	// depth - tab placement
 	// queryNo - which query is currently 
-    public static String evaluateFK(DataObj d, int depth, String lastQueryFrom, String lastQueryWhere) {
+    public String evaluateFK(DataObj d, int depth, String lastQueryFrom, String lastQueryWhere) {
         StringBuilder s = new StringBuilder(4028);
         HashMap<DataObj, List<String>> dataObjsMap = new HashMap<DataObj, List<String>>(); 
 		//First, evaluate all the foreign keys on the current object
