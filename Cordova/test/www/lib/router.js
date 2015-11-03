@@ -1,3 +1,8 @@
+/*
+ * Code taken from Apache Cordova Tutorail
+ * https://ccoenraets.github.io/cordova-tutorial/create-cordova-project.html
+ * Simply mapes url#text[:param] to js used in app.js
+ */
 var router = (function () {
 
     "use strict";
