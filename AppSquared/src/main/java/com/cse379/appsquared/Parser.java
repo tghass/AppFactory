@@ -100,6 +100,7 @@ public class Parser {
     }
 	
     public void parsePages(JSONObject pages){
+        assertTrue(pages.has("Home"),"Must contain a page named 'Home'");
         Iterator<String> keys = pages.keys();
         while(keys.hasNext()){//Loop thruy all pages objs
             String objName = (String)keys.next();

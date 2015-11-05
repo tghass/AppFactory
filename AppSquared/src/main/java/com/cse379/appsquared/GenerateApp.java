@@ -60,6 +60,7 @@ public class GenerateApp {
         System.out.print("Generating Cordova ("+cordovaFolderName+") code...");
         File cordovaDir = new File(cordovaFolderName);
         CordovaGenerator cordGen = new CordovaGenerator(cordovaDir);
+        cordGen.createCode(parser.getDataObjsMap(),parser.getPageObjsMap());
         System.out.println(" done");
 	}
 
