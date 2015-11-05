@@ -4,8 +4,8 @@ import java.io.*;
 //Main class to generate the app
 //First, parses the config file file
 public class GenerateApp {
-    private final static String sqlFileName = "sqlDump.sql";
-    private final static String serverFileName = "app.js";
+    private final static String sqlFileName = "Output/sqlDump.sql";
+    private final static String serverFileName = "Output/app.js";
 
 	public static void main(String [] args) {
         System.out.println("-------------------");
@@ -19,7 +19,7 @@ public class GenerateApp {
 
         //Generate SQL
         try{
-            System.out.print("Generating SQL ("+sqlFileName+") code...");
+            System.out.print("Generating SQL ("+sqlFileName+")...");
             PrintWriter sql = new PrintWriter(
                     new BufferedWriter( new FileWriter(sqlFileName))
                     );

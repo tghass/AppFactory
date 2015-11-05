@@ -14,7 +14,8 @@ CLASSES = \
 	Parser.java\
 	SqlGenerator.java\
 	GenerateApp.java\
-	ApiCreator.java
+	ApiCreator.java\
+	CordovaGenerator.java
 
 default: classes
 
