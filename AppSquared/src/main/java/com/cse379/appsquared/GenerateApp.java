@@ -1,11 +1,15 @@
+package com.cse379.appsquared;
+
 import java.util.*;
 import java.io.*;
 
 //Main class to generate the app
 //First, parses the config file file
 public class GenerateApp {
-    private final static String sqlFileName = "Output/sqlDump.sql";
-    private final static String serverFileName = "Output/app.js";
+    private final static String outputFolder = "Output";
+    private final static String sqlFileName = outputFolder+"/sqlDump.sql";
+    private final static String serverFileName = outputFolder+"/app.js";
+    private final static String cordovaFolderName = outputFolder+"/www";
 
 	public static void main(String [] args) {
         System.out.println("-------------------");
@@ -15,6 +19,11 @@ public class GenerateApp {
 		//Parse file: convert JavaScript objects to Java objects (DataObjects class) 
 		parser.parseFile(filename); 
         System.out.println(" done");
+        
+        //Create the Output folder
+        File outputDir = new File(outputFolder);
+        if(!outputDir.isDirectory())
+            outputDir.mkdir();
 		
 
         //Generate SQL
@@ -45,6 +54,13 @@ public class GenerateApp {
         }catch(IOException e){
             System.out.println("\nCan't write API code to file "+sqlFileName);
         }
+
+
+        //Generate Server File for API
+        System.out.print("Generating Cordova ("+cordovaFolderName+") code...");
+        File cordovaDir = new File(cordovaFolderName);
+        CordovaGenerator cordGen = new CordovaGenerator(cordovaDir);
+        System.out.println(" done");
 	}
 
 }

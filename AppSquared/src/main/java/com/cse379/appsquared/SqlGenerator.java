@@ -1,3 +1,5 @@
+package com.cse379.appsquared;
+
 import java.util.*;
 import java.io.*;
 public class SqlGenerator{

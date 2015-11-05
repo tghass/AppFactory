@@ -1,3 +1,5 @@
+package com.cse379.appsquared;
+
 import java.io.*;
 import java.util.*;
 

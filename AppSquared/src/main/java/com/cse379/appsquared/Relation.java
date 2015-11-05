@@ -1,3 +1,5 @@
+package com.cse379.appsquared;
+
 public class Relation{
     //TODO:
     // - Deal with cases of a&b being same/different objs

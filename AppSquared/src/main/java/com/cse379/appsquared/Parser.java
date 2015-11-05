@@ -1,3 +1,5 @@
+package com.cse379.appsquared;
+
 import org.json.*;
 import java.util.*;
 import java.io.IOException;
