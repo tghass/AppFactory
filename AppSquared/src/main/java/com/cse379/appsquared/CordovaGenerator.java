@@ -12,7 +12,8 @@ public class CordovaGenerator{
     //Fields//
     //////////
     private static final File REF_DIR = new File("resources/www");
-    private static final String appJs = "js/app.js";
+    private static final String jsFolder = "js/";
+    private static final String appJs = jsFolder+"app.js";
     
     private File outputDir;
 
@@ -38,8 +39,47 @@ public class CordovaGenerator{
     public void createCode(HashMap<String,DataObj> dataObjsMap, 
             HashMap<String,PageObj> pageObjMap){
         createAppJs(pageObjMap);
+        createViewFiles(pageObjMap);
     }
-    public void createAppJs(HashMap<String,PageObj> pageObjMap){
+    private void createViewFiles(HashMap<String,PageObj> pageObjMap){
+        Iterator it = pageObjMap.entrySet().iterator();
+        while(it.hasNext()){
+            Map.Entry one = (Map.Entry)it.next();
+            String name = (String)one.getKey();
+            PageObj data = (PageObj)one.getValue();
+            File thisView = new File(outputDir,jsFolder+name+"View.js");
+            try{
+                PrintWriter viewWriter = new PrintWriter(
+                        new BufferedWriter( new FileWriter(thisView))
+                        );
+                
+                //Obj decl
+                viewWriter.write("var "+name+"View = function("/*TODO add params */+"){\n");
+                //Template func
+                viewWriter.write("    this.template = function(){\n"+
+                                 "        return new EJS({url:'Templates/"+name+"'}).render({"+/*TODO add params */"});\n"+
+                                 "    }\n\n");
+                //Render func
+                viewWriter.write("    this.render = function(){\n"+
+                                 "        this.$el.html(this.template()));\n"+
+                                 "    }\n\n");
+                //Initialize func
+                viewWriter.write("    this.initialize = function(){\n"+
+                                 "        this.$el = $('<div/>');\n"+
+                                 /* TODO add necessary code to get needed data */
+                                 "    }\n\n");
+                //Call initialize
+                viewWriter.write("    this.initialize();\n");
+                //End bracket
+                viewWriter.write("}");
+
+                viewWriter.close();
+            }catch(IOException e){
+                System.out.println("\nCan't write API code to file "+appJs);
+            }
+        }
+    }
+    private void createAppJs(HashMap<String,PageObj> pageObjMap){
         File appJsFile = new File(outputDir,appJs);
         try{
             PrintWriter appWriter = new PrintWriter(
