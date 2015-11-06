@@ -43,6 +43,7 @@ public class CordovaGenerator{
         createAppJs(pageObjMap);
         createViewFiles(pageObjMap);
         createTemplates(pageObjMap);
+        createIndexHtml(pageObjMap);
     }
     private void createIndexHtml(HashMap<String,PageObj> pageObjMap){
         try{
@@ -58,7 +59,6 @@ public class CordovaGenerator{
                               "    <meta charset=\"utf-8\">\n"+
                               "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0\">\n"+
                               "    <link href=\"assets/ratchet/css/ratchet.css\" rel=\"stylesheet\">\n"+
-                              "    <link href=\"assets/css/styles.css\" rel=\"stylesheet\">\n"+
                               "</head>\n\n");
             //Write body
             indexWriter.write("<body>\n"+
@@ -67,15 +67,17 @@ public class CordovaGenerator{
                               "	   <script src=\"lib/hello.js\"></script>\n"+
                               "    <script src=\"lib/jquery.js\"></script>\n"+
                               "    <script src=\"lib/router.js\"></script>\n"+
-                              "    <script src=\"lib/ejs.js\"></script>\n");
+                              "    <script src=\"lib/ejs.js\"></script>\n\n");
             //TODO, include services
             //Include Views
             Iterator it = pageObjMap.entrySet().iterator();
             while(it.hasNext()){
                 Map.Entry one = (Map.Entry)it.next();
                 String name = (String)one.getKey();
-                indexWriter.write("    <script src=\""+jsFolder+name+"View.js'\"></script>\n");
+                indexWriter.write("    <script src=\""+jsFolder+name+"View.js\"></script>\n");
             }
+            //Include app.js
+            indexWriter.write("    <script src=\""+appJs+"\"></script>\n");
             //End body and html
             indexWriter.write("</body>\n</html>");
 
