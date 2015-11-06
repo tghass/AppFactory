@@ -9,6 +9,9 @@ import java.util.regex.Pattern;
 
 
 public class Parser {
+    //TODO:
+    // - Confirm no spaces in certain fileds
+
     //////////
     //Fields//
     //////////

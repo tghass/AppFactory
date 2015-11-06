@@ -13,6 +13,7 @@ public class CordovaGenerator{
     //////////
     private static final File REF_DIR = new File("resources/www");
     private static final String jsFolder = "js/";
+    private static final String templateFolder = "templates/";
     private static final String appJs = jsFolder+"app.js";
     
     private File outputDir;
@@ -25,8 +26,9 @@ public class CordovaGenerator{
     public CordovaGenerator(File out){
         outputDir=out;
         outputDir.mkdir();//Make the directory
-        //Copy over the reference directory
+        //Clean the dir the copy over the reference directory
         try{
+            FileUtils.cleanDirectory(outputDir);
             FileUtils.copyDirectory(REF_DIR,outputDir);
         }catch (IOException e){
             System.out.println("Error copying over reference dir for cordova");
@@ -40,6 +42,33 @@ public class CordovaGenerator{
             HashMap<String,PageObj> pageObjMap){
         createAppJs(pageObjMap);
         createViewFiles(pageObjMap);
+        createTemplates(pageObjMap);
+    }
+    private void createTemplates(HashMap<String,PageObj> pageObjMap){
+        Iterator it = pageObjMap.entrySet().iterator();
+        while(it.hasNext()){
+            Map.Entry one = (Map.Entry)it.next();
+            String name = (String)one.getKey();
+            PageObj data = (PageObj)one.getValue();
+            File thisView = new File(outputDir,templateFolder+name+".ejs");
+            try{
+                PrintWriter templateWriter = new PrintWriter(
+                        new BufferedWriter( new FileWriter(thisView))
+                        );
+                //Header
+                templateWriter.write("<header class=\"bar bar-nav\">\n"+
+                                     "    <h1 class=\"title\">"+name+"</h1>\n"+
+                                     "</header>\n");
+                //Body
+                templateWriter.write("<div id=\"maincontent\" class=\"content\">\n"+
+                                     "</div>");
+
+                templateWriter.close();
+            }catch(IOException e){
+                System.out.println("\nCan't write Cordova code to file "+templateFolder+name+".ejs");
+            }
+        }
+
     }
     private void createViewFiles(HashMap<String,PageObj> pageObjMap){
         Iterator it = pageObjMap.entrySet().iterator();
@@ -57,11 +86,12 @@ public class CordovaGenerator{
                 viewWriter.write("var "+name+"View = function("/*TODO add params */+"){\n");
                 //Template func
                 viewWriter.write("    this.template = function(){\n"+
-                                 "        return new EJS({url:'Templates/"+name+"'}).render({"+/*TODO add params */"});\n"+
+                                 "        return new EJS({url:'templates/"+name+"'}).render({"+/*TODO add params */"});\n"+
                                  "    }\n\n");
                 //Render func
                 viewWriter.write("    this.render = function(){\n"+
-                                 "        this.$el.html(this.template()));\n"+
+                                 "        this.$el.html(this.template());\n"+
+                                 "        return this;\n"+
                                  "    }\n\n");
                 //Initialize func
                 viewWriter.write("    this.initialize = function(){\n"+
@@ -75,7 +105,7 @@ public class CordovaGenerator{
 
                 viewWriter.close();
             }catch(IOException e){
-                System.out.println("\nCan't write API code to file "+appJs);
+                System.out.println("\nCan't write Cordova code to file "+jsFolder+name+"View.js");
             }
         }
     }
@@ -115,7 +145,7 @@ public class CordovaGenerator{
                 PageObj data = (PageObj)one.getValue();
                 //Write out this route
                 appWriter.write("    \n"+
-                                "    router.addRoute('"+(name.equals("Home") ? "" : name)+"' function(){\n"+
+                                "    router.addRoute('"+(name.equals("Home") ? "" : name)+"', function(){\n"+
                                     //TODO add parameter handling
                                 "        $('body').html(new "+name+"View("/*TODO, add params*/+").render().$el);\n"+
                                 "    });\n");
@@ -126,7 +156,7 @@ public class CordovaGenerator{
                             "}());\n");
             appWriter.close();
         }catch(IOException e){
-            System.out.println("\nCan't write API code to file "+appJs);
+            System.out.println("\nCan't write Cordova code to file "+appJs);
         }
     }
 }
