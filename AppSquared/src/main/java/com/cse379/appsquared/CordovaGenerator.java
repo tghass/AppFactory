@@ -91,7 +91,7 @@ public class CordovaGenerator{
         while(it.hasNext()){
             Map.Entry one = (Map.Entry)it.next();
             String name = (String)one.getKey();
-            PageObj data = (PageObj)one.getValue();
+            PageObj page = (PageObj)one.getValue();
             File thisTemplate = new File(outputDir,templateFolder+name+".ejs");
             try{
                 PrintWriter templateWriter = new PrintWriter(
@@ -102,8 +102,12 @@ public class CordovaGenerator{
                                      "    <h1 class=\"title\">"+name+"</h1>\n"+
                                      "</header>\n");
                 //Body
-                templateWriter.write("<div id=\"maincontent\" class=\"content\">\n"+
-                                     "</div>");
+                templateWriter.write("<div id=\"maincontent\" class=\"content\">\n");
+                //Just output params for now
+                for(String param : page.getParams()){
+                    templateWriter.write("    <p><%= JSON.stringify("+param+")"+""+"%></p>\n");
+                }
+                templateWriter.write("</div>");
 
                 templateWriter.close();
             }catch(IOException e){
@@ -117,7 +121,7 @@ public class CordovaGenerator{
         while(it.hasNext()){
             Map.Entry one = (Map.Entry)it.next();
             String name = (String)one.getKey();
-            PageObj data = (PageObj)one.getValue();
+            PageObj page = (PageObj)one.getValue();
             File thisView = new File(outputDir,jsFolder+name+"View.js");
             try{
                 PrintWriter viewWriter = new PrintWriter(
@@ -125,11 +129,20 @@ public class CordovaGenerator{
                         );
                 
                 //Obj decl
-                viewWriter.write("var "+name+"View = function("/*TODO add params */+"){\n");
+                viewWriter.write("var "+name+"View = function(");
+                viewWriter.write(page.getParamsString()+"){\n");
                 //Template func
                 viewWriter.write("    this.template = function(){\n"+
-                                 "        return new EJS({url:'templates/"+name+"'}).render({"+/*TODO add params */"});\n"+
-                                 "    }\n\n");
+                                 "        return new EJS({url:'templates/"+name+"'}).render(");
+                StringBuilder params = new StringBuilder(64);
+                for(String param : page.getParams()){
+                    params.append("{"+param+":"+param+"}, ");
+                }
+                int indexOfLastComma = params.lastIndexOf(",");
+                if(indexOfLastComma>=0)
+                    params.setCharAt(indexOfLastComma,' ');//Remove last ,
+                viewWriter.write(params.toString()+");\n");
+                viewWriter.write("    }\n\n");
                 //Render func
                 viewWriter.write("    this.render = function(){\n"+
                                  "        this.$el.html(this.template());\n"+
@@ -184,12 +197,27 @@ public class CordovaGenerator{
             while(it.hasNext()){
                 Map.Entry one = (Map.Entry)it.next();
                 String name = (String)one.getKey();
-                PageObj data = (PageObj)one.getValue();
+                PageObj page = (PageObj)one.getValue();
                 //Write out this route
                 appWriter.write("    \n"+
-                                "    router.addRoute('"+(name.equals("Home") ? "" : name)+"', function(){\n"+
-                                    //TODO add parameter handling
-                                "        $('body').html(new "+name+"View("/*TODO, add params*/+").render().$el);\n"+
+                                "    router.addRoute('");
+                StringBuilder params = new StringBuilder(64);//Add params to url
+                params.append((name.equals("Home") ? "" : name));
+                for(String param : page.getParams()){
+                    params.append("/"+param+"/:"+param);
+                }
+                appWriter.write(params.toString());
+                appWriter.write("', function("+page.getParamsString()+"){\n");
+                appWriter.write("        $('body').html(new "+name+"View(");
+                params = new StringBuilder(64);//Add params to view call
+                for(String param : page.getParams()){
+                    params.append("{"+param+":"+param+"}, ");
+                }
+                int indexOfLastComma = params.lastIndexOf(",");
+                if(indexOfLastComma>=0)
+                    params.deleteCharAt(indexOfLastComma);//Remove last ,
+                appWriter.write(params.toString());
+                appWriter.write(").render().$el);\n"+
                                 "    });\n");
             }
             appWriter.write("    \n"+

@@ -26,6 +26,26 @@ public class PageObj{
     public boolean addSection(String type, ArrayList<String> params, ArrayList<String> show){
         return sections.add(new Section(type, params,show));
     }
+    public String getParamsString(){
+        StringBuilder params = new StringBuilder(64);//Do the params
+        for(String param : getParams()){
+            params.append(param+", ");
+        }
+        int indexOfLastComma = params.lastIndexOf(",");
+        if(indexOfLastComma>=0)
+            params.setCharAt(indexOfLastComma,' ');//Remove last ,
+        return params.toString();
+    }
+    public List<String> getParams(){
+        //TODO, what about multiple of the same type
+        Set params = new HashSet<String>();
+        for(Section s : sections){
+            for(String param : s.getParams()){
+                params.add(param);
+            }
+        }
+        return new ArrayList<String>(params);
+    }
     public String getName(){ return name;}
     public List<Section> getSections(){ return sections;}
     @Override

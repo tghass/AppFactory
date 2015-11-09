@@ -90,6 +90,7 @@
          *
          */
         "Home" : {//Special keyword (think index.html)
+            //What about if we need 2 USer objs for example
             "view" : {//What data to show
                 "params" : ["LoggedInUser"],//LoggedInUser imported in import sec
                 "show" : ["User", "Friendship"]
