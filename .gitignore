@@ -2,3 +2,5 @@
 *.class
 
 Cordova/workshop/
+AppSquared/Output/
+AppSquared/target/

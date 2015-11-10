@@ -1,11 +1,5 @@
 var EmployeeService = function () {
 
-    this.initialize = function () {
-        var deferred = $.Deferred();
-        deferred.resolve();
-        return deferred.promise();
-    }
-		
 	this.addUser = function (data) {
 		var deferred = $.Deferred();
 		var url = 'http://localhost:3000/User/add';
