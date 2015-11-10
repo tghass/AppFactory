@@ -44,7 +44,7 @@ public class CordovaGenerator{
         createAppJs(pageObjMap);
         createViewFiles(pageObjMap);
         createTemplates(pageObjMap);
-        createIndexHtml(pageObjMap);
+        createIndexHtml(pageObjMap,dataObjsMap);
         createSercvies(dataObjsMap);
     }
     /* Create a service file for every Data Object*/
@@ -63,7 +63,7 @@ public class CordovaGenerator{
                                     "    var baseUrl = 'http://localhost:3000/';\n");
                 //Get by ID
                 serviceWriter.write("    this.findById = function(id){\n"+
-                                    "        var deffered = $.Deferred();\n"+
+                                    "        var deferred = $.Deferred();\n"+
                                     "        var url = baseUrl+'"+name+"/find/:id';\n"+
                                     "        $.ajax({\n"+
                                     "            url: url,\n"+
@@ -88,7 +88,7 @@ public class CordovaGenerator{
             }
         }
     }
-    private void createIndexHtml(HashMap<String,PageObj> pageObjMap){
+    private void createIndexHtml(HashMap<String,PageObj> pageObjMap,HashMap<String,DataObj> dataObjsMap){
         try{
             File index = new File(outputDir,"index.html");
             PrintWriter indexWriter = new PrintWriter(
@@ -107,17 +107,24 @@ public class CordovaGenerator{
             indexWriter.write("<body>\n"+
                               "\n"+
                               "    <script type=\"text/javascript\" src=\"cordova.js\"></script>\n"+
-                              "	   <script src=\"lib/hello.js\"></script>\n"+
+                              "    <script src=\"lib/hello.js\"></script>\n"+
                               "    <script src=\"lib/jquery.js\"></script>\n"+
                               "    <script src=\"lib/router.js\"></script>\n"+
                               "    <script src=\"lib/ejs.js\"></script>\n\n");
-            //TODO, include services
             //Include Views
             Iterator it = pageObjMap.entrySet().iterator();
             while(it.hasNext()){
                 Map.Entry one = (Map.Entry)it.next();
                 String name = (String)one.getKey();
                 indexWriter.write("    <script src=\""+jsFolder+name+"View.js\"></script>\n");
+            }
+            indexWriter.write("\n");
+            //Include services
+            it = dataObjsMap.entrySet().iterator();
+            while(it.hasNext()){
+                Map.Entry one = (Map.Entry)it.next();
+                String name = (String)one.getKey();
+                indexWriter.write("    <script src=\""+serviceFolder+name+"Service.js\"></script>\n");
             }
             //Include app.js
             indexWriter.write("    <script src=\""+appJs+"\"></script>\n");
