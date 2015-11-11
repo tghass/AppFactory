@@ -86,8 +86,16 @@ public class ApiCreator {
 		
 			//check if param is a module
 			if (m.isModule(param)) {
-				String fieldName = m.modNameToFieldName(param);
-				queryParam.append(fieldName + " = ? ");
+				String tableName = m.modNameToTableName(param);
+				String fieldName = showObj.getForeignKeyFieldName(tableName);
+				if (fieldName.length()>0) {
+					queryParam.append(showObj.getName() + "."+fieldName + " = ? ");
+				}
+				//could not find the foreign key because it isthis object
+				else {
+				queryParam.append(showObj.getName() + ".ID = ? ");
+				}
+					
 			}
 			//else check if param is a field of dataobj
 			else if (showObj.isField(param)) {
@@ -96,6 +104,13 @@ public class ApiCreator {
 			//else check if param is a foreign key dependency of dataobj
 			else if (foreignKeyField.length() > 0) {
 				queryParam.append(showObj.getName() + "." + foreignKeyField + " = ? ");
+			}
+			//check if param is the same name as that object.
+			//TODO: in this case, it's get by id which has already been
+			//generated. either skip this generation or keep it
+			//for later to make communication with cordova easier
+			else if (showObj.getName().equals(param)) {
+				queryParam.append(showObj.getName() + ".ID = ? ");
 			}
 			// else there is no match. really, this is an error in the config.
 			// TODO: have parser check that one of these three conditions is true
@@ -113,14 +128,14 @@ public class ApiCreator {
 		StringBuilder reqParams = new StringBuilder(128);
 		List<String> getObjs = section.getShow();
 		List<String> getParams = section.getParams();
-		
+		//ArrayList <String> getParams = new ArrayList<String>("LoggedInUser");
 		StringBuilder paramQuery = new StringBuilder(256);
 		reqParams.append("[");
 		boolean first = true;
 		for (String param : getParams) {
 			if (first) { first = false; }
 			else { reqParams.append(","); }
-			paramQuery.append("/find/:" + param);
+			paramQuery.append("/find/"+param+"/:" + param);
 			reqParams.append("req.params." + param);
 		}
 		reqParams.append("]");

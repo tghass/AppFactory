@@ -115,10 +115,12 @@ public class Parser {
 
             //Parse Types
             Iterator<String> fieldIt = oneObj.keys();
-            ArrayList<String> params = new ArrayList<String>();
-            ArrayList<String> show = new ArrayList<String>();
             while(fieldIt.hasNext()){
+				ArrayList<String> params = new ArrayList<String>();
+				ArrayList<String> show = new ArrayList<String>();
+				
                 String typeName = (String)fieldIt.next();
+				System.out.println("\n Type: " + typeName);
                 JSONObject oneSection = oneObj.getJSONObject(typeName);
                 assertTrue(oneSection.has("params"),"Page "+objName+", Section "+typeName+" missing 'params'");
                 JSONArray paramsJson = oneSection.getJSONArray("params");
@@ -126,11 +128,18 @@ public class Parser {
                 JSONArray showJson = oneSection.getJSONArray("show");
                 //Add them to the ALs
                 for(int i=0; i<paramsJson.length(); i++){
+					System.out.println(" \n \t Params: " + paramsJson.getString(i));
                     params.add(paramsJson.getString(i));
                 }
                 for(int i=0; i<showJson.length(); i++){
+					System.out.println(" \n \t Show: " + showJson.getString(i));
                     show.add(showJson.getString(i));
                 }
+				System.out.println("Params added to type: "+ typeName);
+					
+				for (String s : params) {
+					System.out.println("Param: "+s);
+				}
                 pageObj.addSection(typeName,params,show);
             }
         }

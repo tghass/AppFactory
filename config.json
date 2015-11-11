@@ -86,7 +86,9 @@
          *  	1) Imported module
          * 	    2) Field name of show object
 		 *		3) Name of DataObject that is a Foreign key to the show object 
-         *   - show : Which Object to query and show, or what form to create.
+         *		4) The Name of the 'show' dataObj. In this case, it will be the id
+		 * 		  of this dataObj. 
+		 *	- show : Which Object to query and show, or what form to create.
          *     Also an array of strings
          *
          * Additional Notes:
