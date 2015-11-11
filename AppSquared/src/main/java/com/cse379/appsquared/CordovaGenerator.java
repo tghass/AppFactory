@@ -110,7 +110,8 @@ public class CordovaGenerator{
                               "    <script src=\"lib/hello.js\"></script>\n"+
                               "    <script src=\"lib/jquery.js\"></script>\n"+
                               "    <script src=\"lib/router.js\"></script>\n"+
-                              "    <script src=\"lib/ejs.js\"></script>\n\n");
+                              "    <script src=\"lib/ejs.js\"></script>\n\n"+
+                              "    <div id='container'></div>\n");
             //Include Views
             Iterator it = pageObjMap.entrySet().iterator();
             while(it.hasNext()){
@@ -221,10 +222,12 @@ public class CordovaGenerator{
                     new BufferedWriter( new FileWriter(appJsFile))
                     );
             //OAuth login handler
-            appWriter.write("function loginHandler(r){\n"+
-                            "    console.log(r);\n"+
+            appWriter.write("var loggedInUser=undefined;\n"+
+                            "function loginHandler(r){\n"+
+                            "    //console.log(r);\n"+
                             "    hello(r.network).api('me').then(function(me){\n"+
                             "        console.log(me);\n"+
+                            "        loggedInUser=me.id;\n"+
                             "    });\n"+
                             "}\n");
             //Begin immediate func
@@ -258,7 +261,7 @@ public class CordovaGenerator{
                 }
                 appWriter.write(params.toString());
                 appWriter.write("', function("+page.getParamsString()+"){\n");
-                appWriter.write("        $('body').html(new "+name+"View(");
+                appWriter.write("        $('#container').html(new "+name+"View(");
                 params = new StringBuilder(64);//Add params to view call
                 for(String param : page.getParams()){
                     params.append("{"+param+":"+param+"}, ");

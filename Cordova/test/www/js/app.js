@@ -1,9 +1,3 @@
-function loginHandler(r){
-    console.log(r);
-    hello(r.network).api('me').then(function(me){
-        console.log(me);
-    });
-}
 // We use an "Immediate Function" to initialize the application to avoid leaving anything behind in the global scope
 (function () {
 
@@ -23,15 +17,18 @@ function loginHandler(r){
 
     router.addRoute('', function() {
         $('body').html(new HomeView(service).render().$el);
+        setLoginButton();
     });
 
     router.addRoute('change', function() {
         $('body').html(new CrudView(service).render().$el);
+        setLoginButton();
     });
 
     router.addRoute('employees/:id', function(id) {
         service.findById(parseInt(id)).done(function(employee) {
             $('body').html(new EmployeeView(employee).render().$el);
+            setLoginButton();
         });
     });
 
