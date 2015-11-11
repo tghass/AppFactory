@@ -71,6 +71,29 @@ public class DataObj{
     public void setSortBy(String n){
         sortBy=n;
     }
+	
+	public boolean isField(String fieldName) {
+		for (Field f : fields) {
+			String realFieldName = f.getName();
+			if (realFieldName.equals(fieldName)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public String getForeignKeyFieldName(String tableName) {
+		for (Field f: fields) {
+			if (f.getType() == Field.Type.FOREIGN_KEY) {
+				for (DataObj d: dependencies) {
+				    if ((d.getName()).equals(f.getTypeStr())) {
+						return f.getName();
+					}
+				}
+			}
+		}
+		return "";
+	}	
     public String getName(){ return name;}
     public List<Field> getFields(){ return fields;}
     public List<DataObj> getDependencies(){ return dependencies;}

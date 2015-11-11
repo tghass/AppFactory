@@ -82,6 +82,10 @@
          * Each of these fields has two additional fields
          *   - params : What we should filter the data by or what fields should
          *     be automatically populated. This is an array of strings
+		 * 	   Param must be either
+         *  	1) Imported module
+         * 	    2) Field name of show object
+		 *		3) Name of DataObject that is a Foreign key to the show object 
          *   - show : Which Object to query and show, or what form to create.
          *     Also an array of strings
          *
@@ -90,7 +94,6 @@
          *
          */
         "Home" : {//Special keyword (think index.html)
-            //What about if we need 2 USer objs for example
             "view" : {//What data to show
                 "params" : ["LoggedInUser"],//LoggedInUser imported in import sec
                 "show" : ["User", "Friendship"]
@@ -99,6 +102,7 @@
                 "params" : ["LoggedInUser"],
                 "show" : ["Post"]
             }
+			
         },
         "Profile" : {
             "view" : {

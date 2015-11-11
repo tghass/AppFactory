@@ -48,7 +48,8 @@ public class GenerateApp {
                     new BufferedWriter( new FileWriter(serverFileName))
                     );
             ApiCreator apiGen = new ApiCreator(api);
-            apiGen.createServerFile(parser.getDataObjsMap()); //generate sqldump file
+            HashMap<String, PageObj> x = parser.getPageObjsMap();
+			apiGen.createServerFile(parser.getDataObjsMap(), x); 
             api.close();
             System.out.println(" done");
         }catch(IOException e){

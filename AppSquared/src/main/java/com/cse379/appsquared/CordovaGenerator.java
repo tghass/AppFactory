@@ -26,13 +26,16 @@ public class CordovaGenerator{
     /** Constructor for CordovaGenerator */
     public CordovaGenerator(File out){
         outputDir=out;
-        outputDir.mkdir();//Make the directory
+        if (!outputDir.isDirectory()) {
+			outputDir.mkdir();//Make the directory
+		}
         //Clean the dir the copy over the reference directory
         try{
             FileUtils.cleanDirectory(outputDir);
+			System.out.println("here");
             FileUtils.copyDirectory(REF_DIR,outputDir);
         }catch (IOException e){
-            System.out.println("Error copying over reference dir for cordova");
+			System.out.println("Error copying over reference dir for cordova");
         }
     }
 
@@ -40,7 +43,7 @@ public class CordovaGenerator{
     //Methods//
     ///////////
     public void createCode(HashMap<String,DataObj> dataObjsMap, 
-            HashMap<String,PageObj> pageObjMap){
+        HashMap<String,PageObj> pageObjMap){
         createAppJs(pageObjMap);
         createViewFiles(pageObjMap);
         createTemplates(pageObjMap);

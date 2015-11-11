@@ -13,7 +13,7 @@ public class ApiCreator {
     public static int tabDepth = 0;
     public static int queryNo = 0;
     public static int queryNoNext = 1;
-
+	public int LoggedInUser = 1;
     private PrintWriter out;
 
 
@@ -28,7 +28,7 @@ public class ApiCreator {
     ///////////
     //Methods//
     ///////////
-    public void createServerFile(HashMap<String,DataObj> dataObjsMap){
+    public void createServerFile(HashMap<String,DataObj> dataObjsMap, HashMap<String, PageObj> pageObjsMap){
         out.write(genDbConnection());
         //For each data object, get object by ID
         Iterator it = dataObjsMap.entrySet().iterator();
@@ -36,14 +36,127 @@ public class ApiCreator {
             Map.Entry one = (Map.Entry)it.next();
 			DataObj curDataObj = (DataObj)one.getValue();
 			String name = curDataObj.getName();
-			out.write("\n /* " + name + ": CRUD GET, DELETE, UPDATE, POST */\n");
+			out.write("\n /* " + name + ": CRUD GET, DELETE, UPDATE, POST BY ID*/\n");
             out.write(genGetById(curDataObj));
 			out.write(genDelById(curDataObj));
 			out.write(genUpdateById(curDataObj));
 			out.write(genAdd(curDataObj));
         }
+		
+		//For each page, generate the calls necessery to make
+		//the view/create params work
+		it = pageObjsMap.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry one = (Map.Entry)it.next();
+			PageObj curPageObj = (PageObj)one.getValue();
+			String name = curPageObj.getName();
+			out.write("\n /* " + name + ": CRUD GET,DELETE,UPDATE,POST *NOT* BY ID */\n");
+			List<Section> sections = curPageObj.getSections();
+			for (Section section : sections) {
+				switch((Section.Type)section.getType()) {
+					case VIEW:
+						out.write(genGetByPageParam(curPageObj, section, dataObjsMap));
+						break;
+					case CREATE:
+						//out.write(genPostByPageParam(curPageObj, section));
+						break;
+					case MODIFY:
+						break;
+					case DELETE:
+						break;
+				}		
+			}
+		}
 		out.write(genServerListen());
     }
+	
+	public String parsePageParam(DataObj showObj, List<String> getParams) {
+		StringBuilder queryParam = new StringBuilder(512);
+		boolean first = true;
+		//TODO: change var names
+		Modules m = new Modules();
+		for (String param : getParams) {
+			if (first) {
+				first = false;
+			}
+			else {
+				queryParam.append(" and ");
+			}
+			String foreignKeyField = showObj.getForeignKeyFieldName(param);
+		
+			//check if param is a module
+			if (m.isModule(param)) {
+				String fieldName = m.modNameToFieldName(param);
+				queryParam.append(fieldName + " = ? ");
+			}
+			//else check if param is a field of dataobj
+			else if (showObj.isField(param)) {
+				queryParam.append(showObj.getName() + "." + param +" = ? ");
+			}
+			//else check if param is a foreign key dependency of dataobj
+			else if (foreignKeyField.length() > 0) {
+				queryParam.append(showObj.getName() + "." + foreignKeyField + " = ? ");
+			}
+			// else there is no match. really, this is an error in the config.
+			// TODO: have parser check that one of these three conditions is true
+			// now, handle it such that set select * from x where true
+			else {
+				queryParam.append(" true ");
+			}
+		}
+		return queryParam.toString();
+	}
+	
+	
+	public String genGetByPageParam(PageObj pageObj, Section section, HashMap<String,DataObj> dataObjsMap) {
+		StringBuilder s = new StringBuilder(1024);
+		StringBuilder reqParams = new StringBuilder(128);
+		List<String> getObjs = section.getShow();
+		List<String> getParams = section.getParams();
+		
+		StringBuilder paramQuery = new StringBuilder(256);
+		reqParams.append("[");
+		boolean first = true;
+		for (String param : getParams) {
+			if (first) { first = false; }
+			else { reqParams.append(","); }
+			paramQuery.append("/find/:" + param);
+			reqParams.append("req.params." + param);
+		}
+		reqParams.append("]");
+		for (String tableName : getObjs) {
+			DataObj dataObj = dataObjsMap.get(tableName);
+			s.append("app.get('/" + tableName + paramQuery.toString() +"', function(req,res) {\n");
+			String whereParams = parsePageParam(dataObj, getParams);
+			//generates the BASIC select * from table where id = ?
+			s.append(returnTab(1) + "var query = \""+ selectProperties(dataObj) + 
+					" from " + tableName + " as " +tableName+ " where " + whereParams + "\";\n");
+			s.append(returnTab(1) + "con.query(query, "+reqParams.toString()+", function(err, rows0,fields) {\n");
+			s.append(returnTab(2) +"if(err) throw err;\n");
+
+			//once the BASIC info is returned, each foreign key needs to be 
+			//expanded. this is done recursively with evaluateFK()
+			
+			tabDepth = 0;
+			queryNo = 0;
+			queryNoNext = 1;
+			s.append(evaluateFK(dataObj,0, "", ""));
+			s.append(returnTab(tabDepth+2) + "res.jsonp(rows0);\n");
+			
+			//adds all of the closing brackets
+			while (tabDepth +2> 0) {
+				s.append(returnTab(1+tabDepth) + "});\n");
+				tabDepth -= 1;
+			}
+			
+			s.append("\n");
+			}
+		return s.toString();
+	}
+	public String genPostByPageParam(PageObj pageObj, Section section) {
+	return "";
+		//return s.toString();
+	}
 	public String genServerListen() {
 		StringBuilder s = new StringBuilder(1024);
 		s.append("var server = app.listen(3000, function() {\n");
