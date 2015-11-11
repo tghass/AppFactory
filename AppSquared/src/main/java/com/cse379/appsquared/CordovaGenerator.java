@@ -15,6 +15,7 @@ public class CordovaGenerator{
     private static final String jsFolder = "js/";
     private static final String templateFolder = "templates/";
     private static final String appJs = jsFolder+"app.js";
+    private static final String serviceFolder = jsFolder+"services/";
     
     private File outputDir;
 
@@ -43,9 +44,51 @@ public class CordovaGenerator{
         createAppJs(pageObjMap);
         createViewFiles(pageObjMap);
         createTemplates(pageObjMap);
-        createIndexHtml(pageObjMap);
+        createIndexHtml(pageObjMap,dataObjsMap);
+        createSercvies(dataObjsMap);
     }
-    private void createIndexHtml(HashMap<String,PageObj> pageObjMap){
+    /* Create a service file for every Data Object*/
+    private void createSercvies(HashMap<String,DataObj> dataObjsMap){
+        Iterator it = dataObjsMap.entrySet().iterator();
+        while(it.hasNext()){
+            Map.Entry one = (Map.Entry)it.next();
+            String name = (String)one.getKey();
+            DataObj data = (DataObj)one.getValue();
+            try{
+                PrintWriter serviceWriter = new PrintWriter(
+                        new BufferedWriter( new FileWriter(new File(outputDir,serviceFolder+name+"Service.js")))
+                        );
+                //Declare variable
+                serviceWriter.write("var "+name+"Service = function(){\n\n"+
+                                    "    var baseUrl = 'http://localhost:3000/';\n");
+                //Get by ID
+                serviceWriter.write("    this.findById = function(id){\n"+
+                                    "        var deferred = $.Deferred();\n"+
+                                    "        var url = baseUrl+'"+name+"/find/:id';\n"+
+                                    "        $.ajax({\n"+
+                                    "            url: url,\n"+
+                                    "            success: function(data) {\n"+
+                                    "                $.each(data, function(key, val) {\n"+
+                                    "                    deferred.resolve(val);\n"+
+                                    "                });\n"+
+                                    "            },\n"+
+                                    "            dataType: 'jsonp',\n"+
+                                    "            error: function(error1, two,three) {\n"+
+                                    "                console.log( \"Request Failed: \" + two + three);\n"+
+                                    "                deferred.reject(\"Transaction Error: \");\n"+
+                                    "            }\n"+
+                                    "        }); \n"+
+                                    "        return deferred.promise();\n"+
+                                    "    }\n");
+                //Close file
+                serviceWriter.write("}");
+                serviceWriter.close();
+            }catch(IOException e){
+                System.out.println("\nCan't write Cordova code to file "+serviceFolder+name+"Service.js");
+            }
+        }
+    }
+    private void createIndexHtml(HashMap<String,PageObj> pageObjMap,HashMap<String,DataObj> dataObjsMap){
         try{
             File index = new File(outputDir,"index.html");
             PrintWriter indexWriter = new PrintWriter(
@@ -64,17 +107,24 @@ public class CordovaGenerator{
             indexWriter.write("<body>\n"+
                               "\n"+
                               "    <script type=\"text/javascript\" src=\"cordova.js\"></script>\n"+
-                              "	   <script src=\"lib/hello.js\"></script>\n"+
+                              "    <script src=\"lib/hello.js\"></script>\n"+
                               "    <script src=\"lib/jquery.js\"></script>\n"+
                               "    <script src=\"lib/router.js\"></script>\n"+
                               "    <script src=\"lib/ejs.js\"></script>\n\n");
-            //TODO, include services
             //Include Views
             Iterator it = pageObjMap.entrySet().iterator();
             while(it.hasNext()){
                 Map.Entry one = (Map.Entry)it.next();
                 String name = (String)one.getKey();
                 indexWriter.write("    <script src=\""+jsFolder+name+"View.js\"></script>\n");
+            }
+            indexWriter.write("\n");
+            //Include services
+            it = dataObjsMap.entrySet().iterator();
+            while(it.hasNext()){
+                Map.Entry one = (Map.Entry)it.next();
+                String name = (String)one.getKey();
+                indexWriter.write("    <script src=\""+serviceFolder+name+"Service.js\"></script>\n");
             }
             //Include app.js
             indexWriter.write("    <script src=\""+appJs+"\"></script>\n");
