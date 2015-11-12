@@ -111,6 +111,7 @@ public class CordovaGenerator{
                               "    <script src=\"lib/jquery.js\"></script>\n"+
                               "    <script src=\"lib/router.js\"></script>\n"+
                               "    <script src=\"lib/ejs.js\"></script>\n\n"+
+                              "    <script src=\"js/Login.js\"></script>\n"+
                               "    <div id='container'></div>\n");
             //Include Views
             Iterator it = pageObjMap.entrySet().iterator();
@@ -150,6 +151,7 @@ public class CordovaGenerator{
                         );
                 //Header
                 templateWriter.write("<header class=\"bar bar-nav\">\n"+
+                                     "    <a id=\"login\" class=\"icon pull-right\" href=\"#\">Log In</a>\n"+
                                      "    <h1 class=\"title\">"+name+"</h1>\n"+
                                      "</header>\n");
                 //Body
@@ -221,15 +223,6 @@ public class CordovaGenerator{
             PrintWriter appWriter = new PrintWriter(
                     new BufferedWriter( new FileWriter(appJsFile))
                     );
-            //OAuth login handler
-            appWriter.write("var loggedInUser=undefined;\n"+
-                            "function loginHandler(r){\n"+
-                            "    //console.log(r);\n"+
-                            "    hello(r.network).api('me').then(function(me){\n"+
-                            "        console.log(me);\n"+
-                            "        loggedInUser=me.id;\n"+
-                            "    });\n"+
-                            "}\n");
             //Begin immediate func
             appWriter.write("// We use an 'Immediate Function' to initialize the application to avoid leaving anything behind in the global scope\n"+
                             "(function () {\n"+
@@ -257,20 +250,34 @@ public class CordovaGenerator{
                 StringBuilder params = new StringBuilder(64);//Add params to url
                 params.append((name.equals("Home") ? "" : name));
                 for(String param : page.getParams()){
+                    if(param.equals("LoggedInUser"))
+                        continue;
                     params.append("/"+param+"/:"+param);
                 }
                 appWriter.write(params.toString());
-                appWriter.write("', function("+page.getParamsString()+"){\n");
-                appWriter.write("        $('#container').html(new "+name+"View(");
-                params = new StringBuilder(64);//Add params to view call
+                appWriter.write("', function(");
+                params = new StringBuilder(64);//Do the params
                 for(String param : page.getParams()){
-                    params.append("{"+param+":"+param+"}, ");
+                    if(param.equals("LoggedInUser"))
+                        continue;
+                    params.append(param+",");
                 }
                 int indexOfLastComma = params.lastIndexOf(",");
                 if(indexOfLastComma>=0)
                     params.deleteCharAt(indexOfLastComma);//Remove last ,
                 appWriter.write(params.toString());
+                appWriter.write("){\n"+
+                                "        $('#container').html(new "+name+"View(");
+                params = new StringBuilder(64);//Add params to view call
+                for(String param : page.getParams()){
+                    params.append("{"+param+":"+param+"}, ");
+                }
+                indexOfLastComma = params.lastIndexOf(",");
+                if(indexOfLastComma>=0)
+                    params.deleteCharAt(indexOfLastComma);//Remove last ,
+                appWriter.write(params.toString());
                 appWriter.write(").render().$el);\n"+
+                                "        setLoginButton();\n"+
                                 "    });\n");
             }
             appWriter.write("    \n"+
