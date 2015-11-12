@@ -82,18 +82,28 @@ public class DataObj{
 		return false;
 	}
 
-	public String getForeignKeyFieldName(String tableName) {
-		for (Field f: fields) {
+	public String getForeignKeyFieldName(String tableName, int index) {
+		Field f = fields.get(index);
+		return f.getName();
+	}
+
+	public ArrayList<Integer> indexForForeignKeysOfType(String tableName) {
+		ArrayList<Integer> fieldIndices = new ArrayList<Integer>();
+		int numFields = fields.size();
+		for (int i = 0; i < numFields; i++) {
+			Field f = fields.get(i);
 			if (f.getType() == Field.Type.FOREIGN_KEY) {
 				for (DataObj d: dependencies) {
-				    if ((d.getName()).equals(f.getTypeStr())) {
-						return f.getName();
+				    if ((d.getName()).equals(f.getTypeStr()) && (d.getName().equals(tableName))) {
+						fieldIndices.add(i);
+						System.out.println("Dependency table " + d.getName()+" Given "+tableName+" found field " +f.getName());
+						break;
 					}
 				}
 			}
 		}
-		return "";
-	}	
+		return fieldIndices;
+	}
     public String getName(){ return name;}
     public List<Field> getFields(){ return fields;}
     public List<DataObj> getDependencies(){ return dependencies;}

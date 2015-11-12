@@ -72,24 +72,28 @@ public class ApiCreator {
 	
 	public String parsePageParam(DataObj showObj, List<String> getParams) {
 		StringBuilder queryParam = new StringBuilder(512);
-		boolean first = true;
-		//TODO: change var names
+		boolean firstIteration = true;
 		Modules m = new Modules();
 		for (String param : getParams) {
-			if (first) {
-				first = false;
+			if (firstIteration) {
+				firstIteration = false;
 			}
 			else {
 				queryParam.append(" and ");
 			}
-			String foreignKeyField = showObj.getForeignKeyFieldName(param);
-		
+			List<Integer> fkIndices = showObj.indexForForeignKeysOfType(param);
 			//check if param is a module
 			if (m.isModule(param)) {
 				String tableName = m.modNameToTableName(param);
-				String fieldName = showObj.getForeignKeyFieldName(tableName);
-				if (fieldName.length()>0) {
-					queryParam.append(showObj.getName() + "."+fieldName + " = ? ");
+				fkIndices = showObj.indexForForeignKeysOfType(tableName);
+				if (fkIndices.size()>0) {
+					boolean firstIndex = true;
+					for (int fkIndex : fkIndices) {
+						if (firstIndex) { firstIndex = false; }
+						else { queryParam.append(" or "); }
+						String foreignKeyField = showObj.getForeignKeyFieldName(param,fkIndex);
+						queryParam.append(showObj.getName() + "."+foreignKeyField + " = ? ");
+					}
 				}
 				//could not find the foreign key because it isthis object
 				else {
@@ -102,8 +106,15 @@ public class ApiCreator {
 				queryParam.append(showObj.getName() + "." + param +" = ? ");
 			}
 			//else check if param is a foreign key dependency of dataobj
-			else if (foreignKeyField.length() > 0) {
-				queryParam.append(showObj.getName() + "." + foreignKeyField + " = ? ");
+			else if (fkIndices.size() > 0) {
+				boolean firstIndex = true;			
+				for (int fkIndex : fkIndices) {
+					if (firstIndex) { firstIndex = false; }
+					else { queryParam.append(" or "); }
+					String foreignKeyField = showObj.getForeignKeyFieldName(param,fkIndex);
+					queryParam.append(showObj.getName() + "."+foreignKeyField + " = ? ");
+				}
+			
 			}
 			//check if param is the same name as that object.
 			//TODO: in this case, it's get by id which has already been
@@ -122,31 +133,71 @@ public class ApiCreator {
 		return queryParam.toString();
 	}
 	
-	
-	public String genGetByPageParam(PageObj pageObj, Section section, HashMap<String,DataObj> dataObjsMap) {
-		StringBuilder s = new StringBuilder(1024);
+	//makes requests params
+	// ie con.query('SELECT * ... WHERE = ?', [requst params], fcn())
+	public String makeReqParams(DataObj showObj, List<String> pageParams) { 
 		StringBuilder reqParams = new StringBuilder(128);
-		List<String> getObjs = section.getShow();
-		List<String> getParams = section.getParams();
-		//ArrayList <String> getParams = new ArrayList<String>("LoggedInUser");
-		StringBuilder paramQuery = new StringBuilder(256);
 		reqParams.append("[");
-		boolean first = true;
-		for (String param : getParams) {
-			if (first) { first = false; }
+		boolean firstIteration = true;
+		Modules m = new Modules();
+		for (String param : pageParams) {
+			if (firstIteration) { firstIteration = false; }
 			else { reqParams.append(","); }
-			paramQuery.append("/find/"+param+"/:" + param);
-			reqParams.append("req.params." + param);
+			
+			//check if param is a module
+			List<Integer> fkIndices;
+			if (m.isModule(param)) {
+				String tableName = m.modNameToTableName(param);
+				fkIndices = showObj.indexForForeignKeysOfType(tableName);
+			}
+			else {
+				fkIndices = showObj.indexForForeignKeysOfType(param);
+			}
+			
+			System.out.println("Show obj " + showObj.getName() + " for param " + param);
+			System.out.println(fkIndices.size());
+			if (fkIndices.size()>0) {
+				boolean firstIndex = true;
+				for (int fkIndex : fkIndices) {
+					if (firstIndex) { firstIndex = false; }
+					else { reqParams.append(" , "); }
+					String foreignKeyField = showObj.getForeignKeyFieldName(param,fkIndex);
+					reqParams.append("req.params." + param);
+				}
+			}
+			else {
+				reqParams.append("req.params." + param);
+			}
+			
 		}
 		reqParams.append("]");
-		for (String tableName : getObjs) {
+		return reqParams.toString();
+	
+	}
+	public String genGetByPageParam(PageObj pageObj, Section section, HashMap<String,DataObj> dataObjsMap) {
+		StringBuilder s = new StringBuilder(1024);
+		List<String> showObjs = section.getShow();
+		List<String> pageParams = section.getParams();
+		StringBuilder paramQuery = new StringBuilder(256);
+		
+		//create the end of the url
+		for (String param : pageParams) {
+			paramQuery.append("/find/"+param+"/:" + param);
+		}
+		
+		for (String tableName : showObjs) {
 			DataObj dataObj = dataObjsMap.get(tableName);
+			String whereParams = parsePageParam(dataObj, pageParams);
+			String reqParams = makeReqParams(dataObj, pageParams);
 			s.append("app.get('/" + tableName + paramQuery.toString() +"', function(req,res) {\n");
-			String whereParams = parsePageParam(dataObj, getParams);
+			
+			//know when to return response
+			s.append(returnTab(1) + "totalCount = 0;\n");
+			s.append(returnTab(1) + "count = 0;\n");
 			//generates the BASIC select * from table where id = ?
 			s.append(returnTab(1) + "var query = \""+ selectProperties(dataObj) + 
 					" from " + tableName + " as " +tableName+ " where " + whereParams + "\";\n");
-			s.append(returnTab(1) + "con.query(query, "+reqParams.toString()+", function(err, rows0,fields) {\n");
+			s.append(returnTab(1) + "con.query(query,"+ reqParams+", function(err, rows0,fields) {\n");
 			s.append(returnTab(2) +"if(err) throw err;\n");
 
 			//once the BASIC info is returned, each foreign key needs to be 
@@ -155,8 +206,14 @@ public class ApiCreator {
 			tabDepth = 0;
 			queryNo = 0;
 			queryNoNext = 1;
-			s.append(evaluateFK(dataObj,0, "", ""));
-			s.append(returnTab(tabDepth+2) + "res.jsonp(rows0);\n");
+			String fks = evaluateFK(dataObj, 0, "", "", "row.ID");
+			s.append(fks);
+			if (fks.length() > 0) {
+				s.append(returnTab(tabDepth+2) + "count += 1;\n");
+			}
+			s.append(returnTab(tabDepth+2) + "if (count == totalCount) {\n");
+			s.append(returnTab(tabDepth+3) + "res.jsonp(rows0);\n");
+			s.append(returnTab(tabDepth+2) + "}\n");
 			
 			//adds all of the closing brackets
 			while (tabDepth +2> 0) {
@@ -329,7 +386,7 @@ public class ApiCreator {
 		tabDepth = 0;
 		queryNo = 0;
 		queryNoNext = 1;
-		s.append(evaluateFK(dataObj,0, "", ""));
+		s.append(evaluateFK(dataObj,0, "", "", "req.params.id"));
         s.append(returnTab(tabDepth+2) + "res.jsonp(rows0);\n");
 		
 		//adds all of the closing brackets
@@ -375,7 +432,7 @@ public class ApiCreator {
 	// DataObj d - data object that's foreign keys are being expanded from ids to JSON objects
 	// depth - tab placement
 	// queryNo - which query is currently 
-    public String evaluateFK(DataObj d, int depth, String lastQueryFrom, String lastQueryWhere) {
+    public String evaluateFK(DataObj d, int depth, String lastQueryFrom, String lastQueryWhere, String dbQueryParam) {
         StringBuilder s = new StringBuilder(4028);
         HashMap<DataObj, List<String>> dataObjsMap = new HashMap<DataObj, List<String>>(); 
 		//First, evaluate all the foreign keys on the current object
@@ -407,14 +464,17 @@ public class ApiCreator {
 						
                         s.append(returnTab(2+depth) + parentRow
 													+ ".forEach(function(row) { \n");
-                        s.append(returnTab(3+depth) + "query = \"" 
+                        if (depth == 0) {
+							s.append(returnTab(3+depth) +"totalCount += rows0.length;\n");
+						}
+						s.append(returnTab(3+depth) + "query = \"" 
 													+ selectProperties(fkObj) + "\";\n");
                         s.append(returnTab(3+depth) + "query += \"from "+ queryFrom
 													+ "\";\n");
                         s.append(returnTab(3+depth) + "query += \"where "+ queryWhere
 													+ "\";\n");
                         s.append(returnTab(3+depth) 
-									+ "con.query(query, req.params.id, function(err, " 
+									+ "con.query(query, "+dbQueryParam+", function(err, " 
 									+ fkRow+",fields) {\n");
                         s.append(returnTab(4+depth) + "if (err) throw err;\n");
                         s.append(returnTab(4+depth) + "row." + f.getName() 
@@ -453,7 +513,7 @@ public class ApiCreator {
 			//why are we parsing ints? Need to parse the int because
 			//[2] queryNo is an int
 			queryNo = Integer.parseInt(values.get(2));
-			s.append(evaluateFK(key,depth,(String)values.get(0), (String)values.get(1)));
+			s.append(evaluateFK(key,depth,(String)values.get(0), (String)values.get(1), dbQueryParam));
         }
         if (depth > tabDepth) {tabDepth = depth;}
         return s.toString();

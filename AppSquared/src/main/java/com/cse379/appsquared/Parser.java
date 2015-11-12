@@ -135,11 +135,6 @@ public class Parser {
 					System.out.println(" \n \t Show: " + showJson.getString(i));
                     show.add(showJson.getString(i));
                 }
-				System.out.println("Params added to type: "+ typeName);
-					
-				for (String s : params) {
-					System.out.println("Param: "+s);
-				}
                 pageObj.addSection(typeName,params,show);
             }
         }
