@@ -27,6 +27,8 @@ public class Modules {
     ///////////
 	
 	//TODO make modules enums
+	
+	//Determines whether a String is a module 
 	public static boolean isModule(String moduleName) {
 		switch (moduleName) {
 			case "LoggedInUser":
@@ -34,6 +36,8 @@ public class Modules {
 		}
 		return false;
 	}
+	
+	//From a module, returns the table that it refers to
 	public static String modNameToTableName(String moduleName) {
 		String relatedTable= "";
 		switch (moduleName) {

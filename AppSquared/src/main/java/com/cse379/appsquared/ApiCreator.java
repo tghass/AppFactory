@@ -70,6 +70,8 @@ public class ApiCreator {
 		out.write(genServerListen());
     }
 	
+	//From a list of params, this method generates the where clause of the SQL
+	//statement. ie) select * from table WHERE ____
 	public String parsePageParam(DataObj showObj, List<String> getParams) {
 		StringBuilder queryParam = new StringBuilder(512);
 		boolean firstIteration = true;
@@ -91,7 +93,7 @@ public class ApiCreator {
 					for (int fkIndex : fkIndices) {
 						if (firstIndex) { firstIndex = false; }
 						else { queryParam.append(" or "); }
-						String foreignKeyField = showObj.getForeignKeyFieldName(param,fkIndex);
+						String foreignKeyField = showObj.getFieldName(fkIndex);
 						queryParam.append(showObj.getName() + "."+foreignKeyField + " = ? ");
 					}
 				}
@@ -111,7 +113,7 @@ public class ApiCreator {
 				for (int fkIndex : fkIndices) {
 					if (firstIndex) { firstIndex = false; }
 					else { queryParam.append(" or "); }
-					String foreignKeyField = showObj.getForeignKeyFieldName(param,fkIndex);
+					String foreignKeyField = showObj.getFieldName(fkIndex);
 					queryParam.append(showObj.getName() + "."+foreignKeyField + " = ? ");
 				}
 			
@@ -145,6 +147,7 @@ public class ApiCreator {
 			else { reqParams.append(","); }
 			
 			//check if param is a module
+			// see how many fkeys this param stands for
 			List<Integer> fkIndices;
 			if (m.isModule(param)) {
 				String tableName = m.modNameToTableName(param);
@@ -153,27 +156,26 @@ public class ApiCreator {
 			else {
 				fkIndices = showObj.indexForForeignKeysOfType(param);
 			}
-			
-			System.out.println("Show obj " + showObj.getName() + " for param " + param);
-			System.out.println(fkIndices.size());
+			//for every fk, add another req param
+			//because each fk will have a ? in the where clause
 			if (fkIndices.size()>0) {
 				boolean firstIndex = true;
 				for (int fkIndex : fkIndices) {
 					if (firstIndex) { firstIndex = false; }
 					else { reqParams.append(" , "); }
-					String foreignKeyField = showObj.getForeignKeyFieldName(param,fkIndex);
 					reqParams.append("req.params." + param);
 				}
 			}
 			else {
 				reqParams.append("req.params." + param);
 			}
-			
 		}
 		reqParams.append("]");
 		return reqParams.toString();
-	
 	}
+	
+	//Generates the get request for items that the config 'page' section
+	//requests to be shown given a certain param
 	public String genGetByPageParam(PageObj pageObj, Section section, HashMap<String,DataObj> dataObjsMap) {
 		StringBuilder s = new StringBuilder(1024);
 		List<String> showObjs = section.getShow();
@@ -194,6 +196,7 @@ public class ApiCreator {
 			//know when to return response
 			s.append(returnTab(1) + "totalCount = 0;\n");
 			s.append(returnTab(1) + "count = 0;\n");
+			
 			//generates the BASIC select * from table where id = ?
 			s.append(returnTab(1) + "var query = \""+ selectProperties(dataObj) + 
 					" from " + tableName + " as " +tableName+ " where " + whereParams + "\";\n");
@@ -226,8 +229,7 @@ public class ApiCreator {
 		return s.toString();
 	}
 	public String genPostByPageParam(PageObj pageObj, Section section) {
-	return "";
-		//return s.toString();
+		return "";
 	}
 	public String genServerListen() {
 		StringBuilder s = new StringBuilder(1024);

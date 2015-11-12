@@ -82,11 +82,14 @@ public class DataObj{
 		return false;
 	}
 
-	public String getForeignKeyFieldName(String tableName, int index) {
+	//Given an index, gets that field name
+	public String getFieldName(int index) {
 		Field f = fields.get(index);
 		return f.getName();
 	}
 
+	// Given a name of a table, return the indices of the fields that
+	// are foreign keys to that table
 	public ArrayList<Integer> indexForForeignKeysOfType(String tableName) {
 		ArrayList<Integer> fieldIndices = new ArrayList<Integer>();
 		int numFields = fields.size();
@@ -96,7 +99,6 @@ public class DataObj{
 				for (DataObj d: dependencies) {
 				    if ((d.getName()).equals(f.getTypeStr()) && (d.getName().equals(tableName))) {
 						fieldIndices.add(i);
-						System.out.println("Dependency table " + d.getName()+" Given "+tableName+" found field " +f.getName());
 						break;
 					}
 				}
