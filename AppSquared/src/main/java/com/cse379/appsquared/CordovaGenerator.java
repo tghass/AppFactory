@@ -56,44 +56,55 @@ public class CordovaGenerator{
 		HashMap<String,DataObj> dataObjsMap){
 		
         Iterator it = dataObjsMap.entrySet().iterator();
-        while(it.hasNext()){
+        ServiceGenerator servGen = new ServiceGenerator();
+        	
+			
+		while(it.hasNext()){
             Map.Entry one = (Map.Entry)it.next();
             String name = (String)one.getKey();
             DataObj data = (DataObj)one.getValue();
             try{
-                PrintWriter serviceWriter = new PrintWriter(
+				PrintWriter serviceWriter = new PrintWriter(
                         new BufferedWriter( new FileWriter(new File(outputDir,serviceFolder+name+"Service.js")))
                         );
-				ServiceGenerator servGen = new ServiceGenerator();
-                serviceWriter.write(servGen.declareService(name));
+		
+                
 				
-				//Look for all instances of this dataObj on a page's SHOW 
-				// and be able to get it by its params
+				serviceWriter.write(servGen.declareService(name));
+				serviceWriter.write(servGen.genGetById(name));
+                serviceWriter.write(servGen.genAdd(name));
+                serviceWriter.write(servGen.genUpdate(name));
+                serviceWriter.write(servGen.genDelete(name));
+				
+				//Look for all instances of a page's SHOW and find by its params
 				Iterator pageIt = pageObjsMap.entrySet().iterator();
 				while (pageIt.hasNext()) {
 					Map.Entry pOne = (Map.Entry)pageIt.next();
 					PageObj curPageObj = (PageObj)pOne.getValue();
 					List<Section> sections = curPageObj.getSections();
 					for (Section section : sections) {
-						if (section.getShow().contains(name)) {
-							for( String param : section.getParams()) {
-								serviceWriter.write(servGen.genGetByField(name,param));
+						if (section.getType() == Section.Type.VIEW) {
+							for (String dataName: section.getShow()) {
+								serviceWriter.write(servGen.genGetByField(dataName,section.getParams()));
 							}
 						}
 					}
 				}
 				
-                serviceWriter.write(servGen.genAdd(name));
-                serviceWriter.write(servGen.genUpdate(name));
-                serviceWriter.write(servGen.genDelete(name));
-                //Close file
-                serviceWriter.write("}");
-                serviceWriter.close();
+				//Close file
+				serviceWriter.write("}");
+				serviceWriter.close();
+               
             }catch(IOException e){
                 System.out.println("\nCan't write Cordova code to file "+serviceFolder+name+"Service.js");
             }
         }
+		
+		
+			
+			
     }
+	
     private void createIndexHtml(HashMap<String,PageObj> pageObjMap,HashMap<String,DataObj> dataObjsMap){
         try{
             File index = new File(outputDir,"index.html");
@@ -258,17 +269,16 @@ public class CordovaGenerator{
             it = pageObjMap.entrySet().iterator();
             while(it.hasNext()){
                 Map.Entry one = (Map.Entry)it.next();
-                String name = (String)one.getKey();
+                String pageName = (String)one.getKey();
                 PageObj page = (PageObj)one.getValue();
                 //Write out this route
                 appWriter.write("    \n"+
                                 "    router.addRoute('");
                 StringBuilder params = new StringBuilder(64);//Add params to url
-                params.append((name.equals("Home") ? "" : name));
+                params.append((pageName.equals("Home") ? "" : pageName));
 				
 				
 				//TODO":why are we ignoring logged in user
-				//TODO: this won't work for multiple params
                 for(String param : page.getParams()){
                     if(param.equals("LoggedInUser"))
                         continue;
@@ -289,13 +299,24 @@ public class CordovaGenerator{
                 appWriter.write("){\n");
 				
 				
-				// Call the service function that queries the database for data obj based on param
-				for(String param : page.getParams()){
-                    if(param.equals("LoggedInUser"))
-                        continue;
-                    appWriter.write("\t\tservice"+param+".findBy"+param+"("+param+").done(function("+param+"){ \n");
-                }
-				appWriter.write("        $('#container').html(new "+name+"View(");
+				//Determine which service has the correct function	
+				//for each Show object
+				for (Section s: page.getSections()) {
+					if ( s.getType() == Section.Type.VIEW) {
+						for (String serviceName: s.getShow()) {
+							// Call the service function that queries the database for data obj based on param
+							if (page.getParams().size() > 0) { appWriter.write("\t\tservice"+serviceName+"."); }
+							for(String param : page.getParams()){
+								if(param.equals("LoggedInUser"))
+									continue;
+								appWriter.write("findBy"+serviceName);
+							}
+							if (page.getParams().size() > 0) { appWriter.write("("+serviceName+").done(function("+serviceName+"){ \n"); }
+						}
+					}
+				}
+				
+				appWriter.write("\t\t\t$('#container').html(new "+pageName+"View(");
                 params = new StringBuilder(64);//Add params to view call
                 for(String param : page.getParams()){
                     params.append("{"+param+":"+param+"}, ");
@@ -305,7 +326,7 @@ public class CordovaGenerator{
                     params.deleteCharAt(indexOfLastComma);//Remove last ,
                 appWriter.write(params.toString());
                 appWriter.write(").render().$el);\n"+
-                                "        setLoginButton();\n");
+                                "\t\t\tsetLoginButton();\n");
 								
 				//only add closing brackets for the params that we are querying against
 				

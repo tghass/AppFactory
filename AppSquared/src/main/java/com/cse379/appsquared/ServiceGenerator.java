@@ -53,10 +53,27 @@ public class ServiceGenerator {
                         "        return deferred.promise();\n"+
                         "    }\n";
     }
-	public String genGetByField(String name, String field) {
-		return "    this.findBy"+field+" = function(field){\n"+
+	public String genGetByField(String name, List<String> fields) {
+		StringBuilder varDecl =  new StringBuilder(256);
+		StringBuilder paramDecl =  new StringBuilder(256);
+		StringBuilder urlDecl =  new StringBuilder(256);
+		varDecl.append("this.");
+		for (String field : fields) {
+			varDecl.append("findBy"+field);
+			paramDecl.append(field+",");
+			urlDecl.append("/find/"+field+"/+"+field);
+		}
+		
+		//Remove last ,
+		int indexOfLastComma = paramDecl.lastIndexOf(",");
+        if(indexOfLastComma>=0) {
+           paramDecl.setCharAt(indexOfLastComma,' ');
+		}
+		
+		
+		return "\t" +varDecl.toString()+ " = function("+paramDecl.toString()+"){\n"+
                         "        var deferred = $.Deferred();\n"+
-                        "        var url = baseUrl+'"+name+"/find/"+field+"/'+field;\n"+
+                        "        var url = baseUrl+'"+name+ urlDecl.toString() +";\n"+
                         "        $.ajax({\n"+
                         "            url: url,\n"+
                         "            success: function(data) {\n"+
