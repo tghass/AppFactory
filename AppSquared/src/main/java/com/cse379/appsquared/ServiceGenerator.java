@@ -125,7 +125,6 @@ public class ServiceGenerator {
                         "        return deferred.promise();\n"+
                         "    }\n";	
 	}
-	
 		public String genDelete(String name) {
 			return "//DELETE REQUESTS \n"+
 			    "this.del"+name+" = function(id){\n"+

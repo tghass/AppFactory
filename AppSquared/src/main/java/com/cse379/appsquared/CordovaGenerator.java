@@ -45,7 +45,7 @@ public class CordovaGenerator{
     public void createCode(HashMap<String,DataObj> dataObjsMap, 
         HashMap<String,PageObj> pageObjMap){
 		
-        createAppJs(pageObjMap);
+        createAppJs(pageObjMap, dataObjsMap);
         createViewFiles(pageObjMap);
         createTemplates(pageObjMap);
         createIndexHtml(pageObjMap,dataObjsMap);
@@ -223,7 +223,7 @@ public class CordovaGenerator{
             }
         }
     }
-    private void createAppJs(HashMap<String,PageObj> pageObjMap){
+    private void createAppJs(HashMap<String,PageObj> pageObjMap, HashMap<String, DataObj> dataObjsMap){
         File appJsFile = new File(outputDir,appJs);
         try{
             PrintWriter appWriter = new PrintWriter(
@@ -243,9 +243,19 @@ public class CordovaGenerator{
                             "        // Define the OAuth2 return URL\n"+
                             "        redirect_uri : 'http://localhost:8080/index.html'//Must remove port to work in cordova\n"+
                             "    });\n");
-            //TODO: Initializeall services
+							
+            //Initialize all services
+			Iterator it = dataObjsMap.entrySet().iterator();
+			while(it.hasNext()){
+				Map.Entry one = (Map.Entry)it.next();
+				String name = (String)one.getKey();
+				DataObj data = (DataObj)one.getValue();
+				appWriter.write("var service"+name+"= new "+name+"Service();\n");
+			}
+			
+			
             //Add routes
-            Iterator it = pageObjMap.entrySet().iterator();
+            it = pageObjMap.entrySet().iterator();
             while(it.hasNext()){
                 Map.Entry one = (Map.Entry)it.next();
                 String name = (String)one.getKey();
@@ -255,6 +265,10 @@ public class CordovaGenerator{
                                 "    router.addRoute('");
                 StringBuilder params = new StringBuilder(64);//Add params to url
                 params.append((name.equals("Home") ? "" : name));
+				
+				
+				//TODO":why are we ignoring logged in user
+				//TODO: this won't work for multiple params
                 for(String param : page.getParams()){
                     if(param.equals("LoggedInUser"))
                         continue;
@@ -272,8 +286,16 @@ public class CordovaGenerator{
                 if(indexOfLastComma>=0)
                     params.deleteCharAt(indexOfLastComma);//Remove last ,
                 appWriter.write(params.toString());
-                appWriter.write("){\n"+
-                                "        $('#container').html(new "+name+"View(");
+                appWriter.write("){\n");
+				
+				
+				// Call the service function that queries the database for data obj based on param
+				for(String param : page.getParams()){
+                    if(param.equals("LoggedInUser"))
+                        continue;
+                    appWriter.write("\tservice"+param+".findBy"+param+"("+param+").done(function("+param+"){ \n");
+                }
+				appWriter.write("        $('#container').html(new "+name+"View(");
                 params = new StringBuilder(64);//Add params to view call
                 for(String param : page.getParams()){
                     params.append("{"+param+":"+param+"}, ");
@@ -283,8 +305,16 @@ public class CordovaGenerator{
                     params.deleteCharAt(indexOfLastComma);//Remove last ,
                 appWriter.write(params.toString());
                 appWriter.write(").render().$el);\n"+
-                                "        setLoginButton();\n"+
-                                "    });\n");
+                                "        setLoginButton();\n");
+								
+				//only add closing brackets for the params that we are querying against
+				
+				for(String param : page.getParams()){
+                    if(param.equals("LoggedInUser"))
+                        continue;
+                    appWriter.write("\t});\n");
+                }
+                    appWriter.write("    });\n");
             }
             appWriter.write("    \n"+
                             "    router.start();\n"+
