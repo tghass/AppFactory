@@ -46,6 +46,40 @@ public class PageObj{
         }
         return new ArrayList<String>(params);
     }
+    /* Return list of strings. These are the objs that should be viewed,created, etc */
+    public List<String> getShow(Section.Type type){
+        Set show = new HashSet<String>();
+        for(Section s : sections){
+            if(s.getType()==type){
+                for(String param : s.getShow()){
+                    show.add(param);
+                }
+            }
+        }
+        return new ArrayList<String>(show);
+
+    }
+    public String getShowString(){
+        StringBuilder params = new StringBuilder(64);//Add params to view call
+        //Add view show
+        for(Section.Type type : Section.Type.values()){
+            if(getShow(type).size()==0){
+                continue;
+            }
+            params.append("{ "+type.name()+": ");
+            for(String param : getShow(type)){
+                params.append("{"+param+":"+param+"}, ");
+            }
+            int indexOfLastComma = params.lastIndexOf(",");
+            if(indexOfLastComma>=0)
+                params.deleteCharAt(indexOfLastComma);//Remove last ,
+            params.append("},");
+        }
+        int indexOfLastComma = params.lastIndexOf(",");
+        if(indexOfLastComma>=0)
+            params.deleteCharAt(indexOfLastComma);//Remove last ,
+        return params.toString();
+    }
     public String getName(){ return name;}
     public List<Section> getSections(){ return sections;}
     @Override
