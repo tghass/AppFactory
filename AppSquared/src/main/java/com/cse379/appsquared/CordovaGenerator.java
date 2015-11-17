@@ -44,14 +44,17 @@ public class CordovaGenerator{
     ///////////
     public void createCode(HashMap<String,DataObj> dataObjsMap, 
         HashMap<String,PageObj> pageObjMap){
+		
         createAppJs(pageObjMap);
         createViewFiles(pageObjMap);
         createTemplates(pageObjMap);
         createIndexHtml(pageObjMap,dataObjsMap);
-        createSercvies(dataObjsMap);
+        createServices(pageObjMap, dataObjsMap);
     }
     /* Create a service file for every Data Object*/
-    private void createSercvies(HashMap<String,DataObj> dataObjsMap){
+    private void createServices(HashMap<String, PageObj> pageObjsMap, 
+		HashMap<String,DataObj> dataObjsMap){
+		
         Iterator it = dataObjsMap.entrySet().iterator();
         while(it.hasNext()){
             Map.Entry one = (Map.Entry)it.next();
@@ -61,28 +64,28 @@ public class CordovaGenerator{
                 PrintWriter serviceWriter = new PrintWriter(
                         new BufferedWriter( new FileWriter(new File(outputDir,serviceFolder+name+"Service.js")))
                         );
-                //Declare variable
-                serviceWriter.write("var "+name+"Service = function(){\n\n"+
-                                    "    var baseUrl = 'http://localhost:3000/';\n");
-                //Get by ID
-                serviceWriter.write("    this.findById = function(id){\n"+
-                                    "        var deferred = $.Deferred();\n"+
-                                    "        var url = baseUrl+'"+name+"/find/:id';\n"+
-                                    "        $.ajax({\n"+
-                                    "            url: url,\n"+
-                                    "            success: function(data) {\n"+
-                                    "                $.each(data, function(key, val) {\n"+
-                                    "                    deferred.resolve(val);\n"+
-                                    "                });\n"+
-                                    "            },\n"+
-                                    "            dataType: 'jsonp',\n"+
-                                    "            error: function(error1, two,three) {\n"+
-                                    "                console.log( \"Request Failed: \" + two + three);\n"+
-                                    "                deferred.reject(\"Transaction Error: \");\n"+
-                                    "            }\n"+
-                                    "        }); \n"+
-                                    "        return deferred.promise();\n"+
-                                    "    }\n");
+				ServiceGenerator servGen = new ServiceGenerator();
+                serviceWriter.write(servGen.declareService(name));
+				
+				//Look for all instances of this dataObj on a page's SHOW 
+				// and be able to get it by its params
+				Iterator pageIt = pageObjsMap.entrySet().iterator();
+				while (pageIt.hasNext()) {
+					Map.Entry pOne = (Map.Entry)pageIt.next();
+					PageObj curPageObj = (PageObj)pOne.getValue();
+					List<Section> sections = curPageObj.getSections();
+					for (Section section : sections) {
+						if (section.getShow().contains(name)) {
+							for( String param : section.getParams()) {
+								serviceWriter.write(servGen.genGetByField(name,param));
+							}
+						}
+					}
+				}
+				
+                serviceWriter.write(servGen.genAdd(name));
+                serviceWriter.write(servGen.genUpdate(name));
+                serviceWriter.write(servGen.genDelete(name));
                 //Close file
                 serviceWriter.write("}");
                 serviceWriter.close();
