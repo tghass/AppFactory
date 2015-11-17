@@ -210,7 +210,7 @@ public class CordovaGenerator{
                                  "        return new EJS({url:'templates/"+name+"'}).render(");
                 StringBuilder params = new StringBuilder(64);
                 for(String param : page.getParams()){
-                    params.append("{"+param+":"+param+"}, ");
+                    params.append("{VIEW"+":"+param+".VIEW}, ");
                 }
                 int indexOfLastComma = params.lastIndexOf(",");
                 if(indexOfLastComma>=0)
@@ -300,29 +300,25 @@ public class CordovaGenerator{
 							// Call the service function that queries the database for data obj based on param
 							if (page.getParams().size() > 0) { appWriter.write("\t\tservice"+serviceName+"."); }
 							for(String param : page.getParams()){
-								appWriter.write("findBy"+param+"("+param+").done(function("+serviceName+"){ \n");
+								appWriter.write("findBy"+param+"("+param+").done(function("+serviceName+"Response){ \n");
 								numQueries++;
 							}
 						}
 					}
 				}
 				
-				appWriter.write("\t\t\t$('#container').html(new "+pageName+"View("+page.getShowString()+
+				// need to use appended text so that incoming query variable
+				// does not get confused with query response
+				appWriter.write("\t\t\t$('#container').html(new "+pageName+"View("+page.getShowString2("Response")+
                                 ").render().$el);\n"+
                                 "        setLoginButton();\n");
 
 								
-				//only add closing brackets for the params that we are querying against
-				
-				for(String param : page.getParams()){
-                    if(param.equals("LoggedInUser"))
-                        continue;
-                    appWriter.write("        });\n");
-                }
-				
+				//only add closing brackets for the params that we are querying against	
 				for (int i = 0; i < numQueries; i++) {
 					appWriter.write("        });\n");
 				}
+				appWriter.write("        });\n");
             }
             appWriter.write("    \n"+
                             "    router.start();\n"+

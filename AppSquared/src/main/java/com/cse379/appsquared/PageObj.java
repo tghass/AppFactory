@@ -80,6 +80,31 @@ public class PageObj{
             params.deleteCharAt(indexOfLastComma);//Remove last ,
         return params.toString();
     }
+	
+	    public String getShowString2(String appendedText){
+        StringBuilder params = new StringBuilder(64);//Add params to view call
+        //Add view show
+		params.append("{");
+        for(Section.Type type : Section.Type.values()){
+            if(getShow(type).size()==0){
+                continue;
+            }
+            params.append(type.name()+": {");
+            for(String param : getShow(type)){
+                params.append(param+":"+param+appendedText+", ");
+            }
+            int indexOfLastComma = params.lastIndexOf(",");
+            if(indexOfLastComma>=0)
+                params.deleteCharAt(indexOfLastComma);//Remove last ,
+            params.append("},");
+        }
+        int indexOfLastComma = params.lastIndexOf(",");
+        if(indexOfLastComma>=0)
+            params.deleteCharAt(indexOfLastComma);//Remove last ,
+        params.append("}");
+		return params.toString();
+    }
+	
     public String getName(){ return name;}
     public List<Section> getSections(){ return sections;}
     @Override
