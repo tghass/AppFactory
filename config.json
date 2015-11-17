@@ -27,6 +27,7 @@
         "User" : {
             "fields" : { 
                 "Name" : "string",
+                "OauthID" : "string",
                 "PictureUrl" : "string",
                 "Info" : "long string"                  
             },
