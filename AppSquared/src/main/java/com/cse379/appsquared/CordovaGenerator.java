@@ -250,7 +250,7 @@ public class CordovaGenerator{
 				Map.Entry one = (Map.Entry)it.next();
 				String name = (String)one.getKey();
 				DataObj data = (DataObj)one.getValue();
-				appWriter.write("var service"+name+"= new "+name+"Service();\n");
+				appWriter.write("\tvar service"+name+"= new "+name+"Service();\n");
 			}
 			
 			
@@ -293,7 +293,7 @@ public class CordovaGenerator{
 				for(String param : page.getParams()){
                     if(param.equals("LoggedInUser"))
                         continue;
-                    appWriter.write("\tservice"+param+".findBy"+param+"("+param+").done(function("+param+"){ \n");
+                    appWriter.write("\t\tservice"+param+".findBy"+param+"("+param+").done(function("+param+"){ \n");
                 }
 				appWriter.write("        $('#container').html(new "+name+"View(");
                 params = new StringBuilder(64);//Add params to view call
@@ -312,7 +312,7 @@ public class CordovaGenerator{
 				for(String param : page.getParams()){
                     if(param.equals("LoggedInUser"))
                         continue;
-                    appWriter.write("\t});\n");
+                    appWriter.write("\t\t});\n");
                 }
                     appWriter.write("    });\n");
             }
