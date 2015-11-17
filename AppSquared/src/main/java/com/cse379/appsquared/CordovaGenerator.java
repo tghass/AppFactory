@@ -46,7 +46,7 @@ public class CordovaGenerator{
 		
         createAppJs(pageObjMap, dataObjsMap);
         createViewFiles(pageObjMap);
-        createTemplates(pageObjMap);
+        createTemplates(pageObjMap,dataObjsMap);
         createIndexHtml(pageObjMap,dataObjsMap);
         createServices(pageObjMap, dataObjsMap);
     }
@@ -149,7 +149,7 @@ public class CordovaGenerator{
             System.out.println("\nCan't write Cordova code to file index.html");
         }
     }
-    private void createTemplates(HashMap<String,PageObj> pageObjMap){
+    private void createTemplates(HashMap<String,PageObj> pageObjMap,HashMap<String,DataObj> dataObjsMap){
         Iterator it = pageObjMap.entrySet().iterator();
         while(it.hasNext()){
             Map.Entry one = (Map.Entry)it.next();
@@ -168,12 +168,19 @@ public class CordovaGenerator{
                 //Body
                 templateWriter.write("<div id=\"maincontent\" class=\"content\">\n");
                 //Just output params for now
-                //TODO generate js code in DO file. Need to pass dataObjsMap to this func
                 for(String param : page.getShow(Section.Type.VIEW)){
-                    templateWriter.write("    <p><%= JSON.stringify(VIEW."+param+")%></p>\n");
+                    List<String> display = dataObjsMap.get(param).getDisplay();
+                    for(String di : display){
+                        if(di.startsWith("@"))
+                            templateWriter.write("    <p>"+di.substring(1)+"</p>\n");
+                        else{
+                            templateWriter.write("    <p><%= VIEW."+param+"."+di+"%></p>\n");
+                        }
+                    }
+                    templateWriter.write("    <br>\n\n");
                 }
                 for(String param : page.getShow(Section.Type.CREATE)){
-                    templateWriter.write("    <p><%= JSON.stringify(CREATE."+param+")%></p>\n");
+                    templateWriter.write("    <p> Create -> "+param+"</p>\n");
                 }
                 for(String param : page.getShow(Section.Type.MODIFY)){
                     templateWriter.write("    <p><%= JSON.stringify(MODIFY."+param+")%></p>\n");
@@ -245,9 +252,19 @@ public class CordovaGenerator{
                     new BufferedWriter( new FileWriter(appJsFile))
                     );
             //Begin immediate func
-            appWriter.write("// We use an 'Immediate Function' to initialize the application"+
-                            "to avoid leaving anything behind in the global scope\n\n"+
-                            "(function(){\n");
+            appWriter.write("// We use an 'Immediate Function' to initialize the application to avoid leaving anything behind in the global scope\n"+
+                            "(function () {\n"+
+                            "\n"+
+                            "    // Initate the library\n"+
+                            "    hello.init({\n"+
+                            //TODO: Parse Oauth tokens from a config file
+                            "        google : '164737927993-l34g84brkg96ufe30ve2mjpg6lcen2pg.apps.googleusercontent.com',\n"+
+                            "        facebook : '160981280706879',\n"+
+                            "        windows : '00000000400D8578'\n"+
+                            "    }, {\n"+
+                            "        // Define the OAuth2 return URL\n"+
+                            "        redirect_uri : 'http://localhost:8080/index.html'//Must remove port to work in cordova\n"+
+                            "    });\n");
 							
             //Initialize all services
 			Iterator it = dataObjsMap.entrySet().iterator();
@@ -255,7 +272,7 @@ public class CordovaGenerator{
 				Map.Entry one = (Map.Entry)it.next();
 				String name = (String)one.getKey();
 				DataObj data = (DataObj)one.getValue();
-				appWriter.write("\tvar service"+name+"= new "+name+"Service();\n");
+				appWriter.write("    var service"+name+"= new "+name+"Service();\n");
 			}
 			
             //Add routes
@@ -298,7 +315,9 @@ public class CordovaGenerator{
 					if ( s.getType() == Section.Type.VIEW) {
 						for (String serviceName: s.getShow()) {
 							// Call the service function that queries the database for data obj based on param
-							if (page.getParams().size() > 0) { appWriter.write("\t\tservice"+serviceName+"."); }
+							if (page.getParams().size() > 0) { 
+                                appWriter.write("        service"+serviceName+"."); 
+                            }
 							for(String param : page.getParams()){
 								appWriter.write("findBy"+param+"("+param+").done(function("+serviceName+"Response){ \n");
 								numQueries++;
@@ -309,7 +328,7 @@ public class CordovaGenerator{
 				
 				// need to use appended text so that incoming query variable
 				// does not get confused with query response
-				appWriter.write("\t\t\t$('#container').html(new "+pageName+"View("+page.getShowString2("Response")+
+				appWriter.write("            $('#container').html(new "+pageName+"View("+page.getShowString("Response")+
                                 ").render().$el);\n"+
                                 "        setLoginButton();\n");
 

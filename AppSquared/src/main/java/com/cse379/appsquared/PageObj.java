@@ -59,34 +59,19 @@ public class PageObj{
         return new ArrayList<String>(show);
 
     }
-    public String getShowString(){
-        StringBuilder params = new StringBuilder(64);//Add params to view call
-        //Add view show
-        for(Section.Type type : Section.Type.values()){
-            if(getShow(type).size()==0){
-                continue;
-            }
-            params.append("{ "+type.name()+": ");
-            for(String param : getShow(type)){
-                params.append("{"+param+":"+param+"}, ");
-            }
-            int indexOfLastComma = params.lastIndexOf(",");
-            if(indexOfLastComma>=0)
-                params.deleteCharAt(indexOfLastComma);//Remove last ,
-            params.append("},");
-        }
-        int indexOfLastComma = params.lastIndexOf(",");
-        if(indexOfLastComma>=0)
-            params.deleteCharAt(indexOfLastComma);//Remove last ,
-        return params.toString();
-    }
-	
-	    public String getShowString2(String appendedText){
+    public String getShowString(String appendedText){
         StringBuilder params = new StringBuilder(64);//Add params to view call
         //Add view show
 		params.append("{");
         for(Section.Type type : Section.Type.values()){
             if(getShow(type).size()==0){
+                continue;
+            }
+            //We don't need to pass any data in here
+            if(type==Section.Type.CREATE || type==Section.Type.DELETE){
+                params.append(type.name()+": \"");
+                params.append(String.join("\", \"", getShow(type)));
+                params.append("\",");
                 continue;
             }
             params.append(type.name()+": {");

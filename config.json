@@ -67,7 +67,7 @@
             },
             "sortBy" : "PostDate",
             "display" : [
-                " @By ","PostBy"," @On ","PostDate","Content"
+                " @By ","CreatedBy"," @On ","PostDate","Content"
             ]
         }
     },
