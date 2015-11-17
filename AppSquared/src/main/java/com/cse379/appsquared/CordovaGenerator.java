@@ -161,10 +161,19 @@ public class CordovaGenerator{
                                      "</header>\n");
                 //Body
                 templateWriter.write("<div id=\"maincontent\" class=\"content\">\n");
-                //Just output view params for now
+                //Just output params for now
+                //TODO generate js code in DO file. Need to pass dataObjsMap to this func
                 for(String param : page.getShow(Section.Type.VIEW)){
-                    //TODO generate js code in DO file. Need to pass dataObjsMap to this func
-                    templateWriter.write("    <p><%= JSON.stringify("+param+")%></p>\n");
+                    templateWriter.write("    <p><%= JSON.stringify(VIEW."+param+")%></p>\n");
+                }
+                for(String param : page.getShow(Section.Type.CREATE)){
+                    templateWriter.write("    <p><%= JSON.stringify(CREATE."+param+")%></p>\n");
+                }
+                for(String param : page.getShow(Section.Type.MODIFY)){
+                    templateWriter.write("    <p><%= JSON.stringify(MODIFY."+param+")%></p>\n");
+                }
+                for(String param : page.getShow(Section.Type.DELETE)){
+                    templateWriter.write("    <p><%= JSON.stringify(DELETE."+param+")%></p>\n");
                 }
                 templateWriter.write("</div>");
 
@@ -230,7 +239,9 @@ public class CordovaGenerator{
                     new BufferedWriter( new FileWriter(appJsFile))
                     );
             //Begin immediate func
-            appWriter.write("// We use an 'Immediate Function' to initialize the application to avoid leaving anything behind in the global scope\n");
+            appWriter.write("// We use an 'Immediate Function' to initialize the application"+
+                            "to avoid leaving anything behind in the global scope\n\n"+
+                            "(function(){\n");
 							
             //Initialize all services
 			Iterator it = dataObjsMap.entrySet().iterator();
@@ -240,7 +251,6 @@ public class CordovaGenerator{
 				DataObj data = (DataObj)one.getValue();
 				appWriter.write("\tvar service"+name+"= new "+name+"Service();\n");
 			}
-			
 			
             //Add routes
             it = pageObjMap.entrySet().iterator();
@@ -253,7 +263,6 @@ public class CordovaGenerator{
                                 "    router.addRoute('");
                 StringBuilder params = new StringBuilder(64);//Add params to url
                 params.append((name.equals("Home") ? "" : name));
-				
 				
 				//TODO: this won't work for multiple params
                 for(String param : page.getParams()){
@@ -275,12 +284,11 @@ public class CordovaGenerator{
                 appWriter.write(params.toString());
                 appWriter.write("){\n");
 				
-				
 				// Call the service function that queries the database for data obj based on param
 				for(String param : page.getParams()){
                     if(param.equals("LoggedInUser"))
                         continue;
-                    appWriter.write("\t\tservice"+param+".findBy"+param+"("+param+").done(function("+param+"){ \n");
+                    appWriter.write("        service"+param+".findBy"+param+"("+param+").done(function("+param+"){ \n");
                 }
 				appWriter.write("        $('#container').html(new "+name+"View("+page.getShowString()+
                                 ").render().$el);\n"+
@@ -291,7 +299,7 @@ public class CordovaGenerator{
 				for(String param : page.getParams()){
                     if(param.equals("LoggedInUser"))
                         continue;
-                    appWriter.write("\t\t});\n");
+                    appWriter.write("        });\n");
                 }
                     appWriter.write("    });\n");
             }
