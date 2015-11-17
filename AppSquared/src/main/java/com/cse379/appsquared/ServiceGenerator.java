@@ -61,7 +61,7 @@ public class ServiceGenerator {
 		for (String field : fields) {
 			varDecl.append("findBy"+field);
 			paramDecl.append(field+",");
-			urlDecl.append("/find/"+field+"/+"+field);
+			urlDecl.append("+'/find/"+field+"/'+"+field);
 		}
 		
 		//Remove last ,
@@ -73,7 +73,7 @@ public class ServiceGenerator {
 		
 		return "\t" +varDecl.toString()+ " = function("+paramDecl.toString()+"){\n"+
                         "        var deferred = $.Deferred();\n"+
-                        "        var url = baseUrl+'"+name+ urlDecl.toString() +";\n"+
+                        "        var url = baseUrl+'"+name+"'"+ urlDecl.toString() +";\n"+
                         "        $.ajax({\n"+
                         "            url: url,\n"+
                         "            success: function(data) {\n"+

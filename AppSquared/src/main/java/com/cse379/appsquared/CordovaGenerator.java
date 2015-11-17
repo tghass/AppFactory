@@ -65,10 +65,7 @@ public class CordovaGenerator{
             try{
 				PrintWriter serviceWriter = new PrintWriter(
                         new BufferedWriter( new FileWriter(new File(outputDir,serviceFolder+name+"Service.js")))
-                        );
-		
-                
-				
+                        );	
 				serviceWriter.write(servGen.declareService(name));
 				serviceWriter.write(servGen.genGetById(name));
                 serviceWriter.write(servGen.genAdd(name));
@@ -82,10 +79,8 @@ public class CordovaGenerator{
 					PageObj curPageObj = (PageObj)pOne.getValue();
 					List<Section> sections = curPageObj.getSections();
 					for (Section section : sections) {
-						if (section.getType() == Section.Type.VIEW) {
-							for (String dataName: section.getShow()) {
-								serviceWriter.write(servGen.genGetByField(dataName,section.getParams()));
-							}
+						if (section.getType() == Section.Type.VIEW && section.getShow().contains(name)) {
+							serviceWriter.write(servGen.genGetByField(name,section.getParams()));
 						}
 					}
 				}
@@ -295,6 +290,7 @@ public class CordovaGenerator{
                 appWriter.write(params.toString());
                 appWriter.write("){\n");
 			
+				int numQueries = 0;
 				
 				//Determine which service has the correct function	
 				//for each Show object
@@ -304,11 +300,9 @@ public class CordovaGenerator{
 							// Call the service function that queries the database for data obj based on param
 							if (page.getParams().size() > 0) { appWriter.write("\t\tservice"+serviceName+"."); }
 							for(String param : page.getParams()){
-								if(param.equals("LoggedInUser"))
-									continue;
-								appWriter.write("findBy"+serviceName);
+								appWriter.write("findBy"+param+"("+param+").done(function("+serviceName+"){ \n");
+								numQueries++;
 							}
-							if (page.getParams().size() > 0) { appWriter.write("("+serviceName+").done(function("+serviceName+"){ \n"); }
 						}
 					}
 				}
@@ -325,7 +319,10 @@ public class CordovaGenerator{
                         continue;
                     appWriter.write("        });\n");
                 }
-                    appWriter.write("    });\n");
+				
+				for (int i = 0; i < numQueries; i++) {
+					appWriter.write("        });\n");
+				}
             }
             appWriter.write("    \n"+
                             "    router.start();\n"+
