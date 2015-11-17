@@ -32,7 +32,6 @@ public class CordovaGenerator{
         //Clean the dir the copy over the reference directory
         try{
             FileUtils.cleanDirectory(outputDir);
-			System.out.println("here");
             FileUtils.copyDirectory(REF_DIR,outputDir);
         }catch (IOException e){
 			System.out.println("Error copying over reference dir for cordova");
@@ -174,8 +173,18 @@ public class CordovaGenerator{
                 //Body
                 templateWriter.write("<div id=\"maincontent\" class=\"content\">\n");
                 //Just output params for now
-                for(String param : page.getParams()){
-                    templateWriter.write("    <p><%= JSON.stringify("+param+")"+""+"%></p>\n");
+                //TODO generate js code in DO file. Need to pass dataObjsMap to this func
+                for(String param : page.getShow(Section.Type.VIEW)){
+                    templateWriter.write("    <p><%= JSON.stringify(VIEW."+param+")%></p>\n");
+                }
+                for(String param : page.getShow(Section.Type.CREATE)){
+                    templateWriter.write("    <p><%= JSON.stringify(CREATE."+param+")%></p>\n");
+                }
+                for(String param : page.getShow(Section.Type.MODIFY)){
+                    templateWriter.write("    <p><%= JSON.stringify(MODIFY."+param+")%></p>\n");
+                }
+                for(String param : page.getShow(Section.Type.DELETE)){
+                    templateWriter.write("    <p><%= JSON.stringify(DELETE."+param+")%></p>\n");
                 }
                 templateWriter.write("</div>");
 
@@ -241,19 +250,9 @@ public class CordovaGenerator{
                     new BufferedWriter( new FileWriter(appJsFile))
                     );
             //Begin immediate func
-            appWriter.write("// We use an 'Immediate Function' to initialize the application to avoid leaving anything behind in the global scope\n"+
-                            "(function () {\n"+
-                            "\n"+
-                            "    // Initate the library\n"+
-                            "    hello.init({\n"+
-                            //TODO: Parse Oauth tokens from a config file
-                            "        google : '164737927993-l34g84brkg96ufe30ve2mjpg6lcen2pg.apps.googleusercontent.com',\n"+
-                            "        facebook : '160981280706879',\n"+
-                            "        windows : '00000000400D8578'\n"+
-                            "    }, {\n"+
-                            "        // Define the OAuth2 return URL\n"+
-                            "        redirect_uri : 'http://localhost:8080/index.html'//Must remove port to work in cordova\n"+
-                            "    });\n");
+            appWriter.write("// We use an 'Immediate Function' to initialize the application"+
+                            "to avoid leaving anything behind in the global scope\n\n"+
+                            "(function(){\n");
 							
             //Initialize all services
 			Iterator it = dataObjsMap.entrySet().iterator();
@@ -263,7 +262,6 @@ public class CordovaGenerator{
 				DataObj data = (DataObj)one.getValue();
 				appWriter.write("\tvar service"+name+"= new "+name+"Service();\n");
 			}
-			
 			
             //Add routes
             it = pageObjMap.entrySet().iterator();
@@ -277,8 +275,7 @@ public class CordovaGenerator{
                 StringBuilder params = new StringBuilder(64);//Add params to url
                 params.append((pageName.equals("Home") ? "" : pageName));
 				
-				
-				//TODO":why are we ignoring logged in user
+
                 for(String param : page.getParams()){
                     if(param.equals("LoggedInUser"))
                         continue;
@@ -297,7 +294,7 @@ public class CordovaGenerator{
                     params.deleteCharAt(indexOfLastComma);//Remove last ,
                 appWriter.write(params.toString());
                 appWriter.write("){\n");
-				
+			
 				
 				//Determine which service has the correct function	
 				//for each Show object
@@ -316,24 +313,17 @@ public class CordovaGenerator{
 					}
 				}
 				
-				appWriter.write("\t\t\t$('#container').html(new "+pageName+"View(");
-                params = new StringBuilder(64);//Add params to view call
-                for(String param : page.getParams()){
-                    params.append("{"+param+":"+param+"}, ");
-                }
-                indexOfLastComma = params.lastIndexOf(",");
-                if(indexOfLastComma>=0)
-                    params.deleteCharAt(indexOfLastComma);//Remove last ,
-                appWriter.write(params.toString());
-                appWriter.write(").render().$el);\n"+
-                                "\t\t\tsetLoginButton();\n");
+				appWriter.write("\t\t\t$('#container').html(new "+pageName+"View("+page.getShowString()+
+                                ").render().$el);\n"+
+                                "        setLoginButton();\n");
+
 								
 				//only add closing brackets for the params that we are querying against
 				
 				for(String param : page.getParams()){
                     if(param.equals("LoggedInUser"))
                         continue;
-                    appWriter.write("\t\t});\n");
+                    appWriter.write("        });\n");
                 }
                     appWriter.write("    });\n");
             }

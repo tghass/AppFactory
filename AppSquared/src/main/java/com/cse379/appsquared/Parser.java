@@ -120,7 +120,6 @@ public class Parser {
 				ArrayList<String> show = new ArrayList<String>();
 				
                 String typeName = (String)fieldIt.next();
-				System.out.println("\n Type: " + typeName);
                 JSONObject oneSection = oneObj.getJSONObject(typeName);
                 assertTrue(oneSection.has("params"),"Page "+objName+", Section "+typeName+" missing 'params'");
                 JSONArray paramsJson = oneSection.getJSONArray("params");
@@ -128,11 +127,9 @@ public class Parser {
                 JSONArray showJson = oneSection.getJSONArray("show");
                 //Add them to the ALs
                 for(int i=0; i<paramsJson.length(); i++){
-					System.out.println(" \n \t Params: " + paramsJson.getString(i));
                     params.add(paramsJson.getString(i));
                 }
                 for(int i=0; i<showJson.length(); i++){
-					System.out.println(" \n \t Show: " + showJson.getString(i));
                     show.add(showJson.getString(i));
                 }
                 pageObj.addSection(typeName,params,show);
