@@ -1,12 +1,33 @@
 var LoggedInUser = undefined;
+var serv = new UserService();
 function loginHandler(r){
     //console.log(r);
     hello(r.network).api('me').then(function(me){
-        console.log(me);
-        LoggedInUser = me.id;
-        setLogout();
-        window.location.hash='#';
-        $(window).trigger('hashchange');
+        //console.log(me);
+        serv.findByOAuthID(me.id).done(function(res){
+            if(res!=false){//We already have a user
+                LoggedInUser = res.ID;
+                setLogout();
+                window.location.hash='#';
+                $(window).trigger('hashchange');
+            }else{//Create a new user
+                var data = {
+                    PictureUrl : me.picture,
+                    OAuthID : me.id,
+                    Info : "User info",
+                    Name : me.displayName 
+                };
+                serv.addUser(data).done(function(result){
+                    serv.findByOAuthID(me.id).done(function(newResult){
+                        LoggedInUser = newResult.ID;
+                        setLogout();
+                        window.location.hash='#';
+                        $(window).trigger('hashchange');
+                    });
+                });
+            }
+        });
+        console.log("Done");
     });
 }
 function logoutHandler(r){

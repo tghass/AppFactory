@@ -25,6 +25,7 @@ public class SqlGenerator{
     //Methods//
     ///////////
 	public void toSql(HashMap<String,DataObj> dataObjsMap){
+        out.write("DROP DATABASE IF EXISTS `"+tempDBName+"`;\n");
         out.write("CREATE DATABASE  IF NOT EXISTS `"+tempDBName+"`;\n");
         out.write("USE `"+tempDBName+"`;\n");
         Iterator it = dataObjsMap.entrySet().iterator();
@@ -43,7 +44,7 @@ public class SqlGenerator{
                 s.append(toSql(obj));
             }
             //Now this one
-            s.append("DROP TABLE IF EXISTS `").append(name).append("`;\n");
+            //s.append("DROP TABLE IF EXISTS `").append(name).append("`;\n");
             s.append("CREATE TABLE `").append(name).append("`(\n");
                 for(Field f : d.getFields()){//Add fields
                     s.append(toSql(f));

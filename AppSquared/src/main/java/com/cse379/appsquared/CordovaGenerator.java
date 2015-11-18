@@ -84,7 +84,9 @@ public class CordovaGenerator{
 						}
 					}
 				}
-				
+                //Hack to get OAuth stuff working
+                serviceWriter.write(servGen.genGetByField("User",new ArrayList<String>(Arrays.asList(new String[] {"OAuthID"}))));
+
 				//Close file
 				serviceWriter.write("}");
 				serviceWriter.close();
@@ -122,7 +124,6 @@ public class CordovaGenerator{
                               "    <script src=\"lib/jquery.js\"></script>\n"+
                               "    <script src=\"lib/router.js\"></script>\n"+
                               "    <script src=\"lib/ejs.js\"></script>\n\n"+
-                              "    <script src=\"js/Login.js\"></script>\n"+
                               "    <div id='container'></div>\n");
             //Include Views
             Iterator it = pageObjMap.entrySet().iterator();
@@ -139,6 +140,8 @@ public class CordovaGenerator{
                 String name = (String)one.getKey();
                 indexWriter.write("    <script src=\""+serviceFolder+name+"Service.js\"></script>\n");
             }
+            //Inlude login capabilities
+            indexWriter.write("    <script src=\"js/Login.js\"></script>\n");
             //Include app.js
             indexWriter.write("    <script src=\""+appJs+"\"></script>\n");
             //End body and html

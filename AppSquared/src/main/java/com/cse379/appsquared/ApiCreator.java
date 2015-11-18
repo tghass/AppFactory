@@ -41,6 +41,11 @@ public class ApiCreator {
 			out.write(genDelById(curDataObj));
 			out.write(genUpdateById(curDataObj));
 			out.write(genAdd(curDataObj));
+            //Hack to get a necessary API call for OAuth stuff
+            out.write(genGetByPageParam(null,new Section("View",
+                                                 new ArrayList<String>(Arrays.asList(new String[] {"OAuthID"})),
+                                                 new ArrayList<String>(Arrays.asList(new String[] {"User"}))),
+                                             dataObjsMap));
         }
 		
 		//For each page, generate the calls necessery to make
@@ -99,7 +104,7 @@ public class ApiCreator {
 				}
 				//could not find the foreign key because it isthis object
 				else {
-				queryParam.append(showObj.getName() + ".ID = ? ");
+                    queryParam.append(showObj.getName() + ".ID = ? ");
 				}
 					
 			}
@@ -267,6 +272,21 @@ public class ApiCreator {
         s.append("\tconsole.log('Connection established.');\n");
         s.append("});\n");
         s.append("\n");
+        //Get CORS POST working
+        s.append("//Important to make POST work\n");
+        s.append("// npm install express-cors \n");
+        s.append("var cors = require('express-cors')\n");
+        s.append(" \n");
+        s.append("app.use(function(req,res, next) {\n");
+        s.append("    res.header(\"Access-Control-Allow-Origin\", \"*\");\n");
+        s.append("    res.header(\"Access-Control-Allow-Headers\", \"Origin, X-Requested-With, Content-Type, Accept\");\n");
+        s.append("    res.header(\"Access-Control-Allow-Methods\", \"POST, GET, OPTIONS\");\n");
+        s.append("    res.header(\"Access-Control-Max-Age\", \"1000\"); \n");
+        s.append("    cors({\n");
+        s.append("        allowedOrigins: [ 'localhost:8080' ] });\n");
+        s.append("    next();\n");
+        s.append("});\n");
+
 		
 		
         return s.toString();
@@ -294,7 +314,7 @@ public class ApiCreator {
 		s.append(returnTab(3) + "if (err) { console.log('Error updating'); }\n");
 		s.append(returnTab(3) + "else {\n");
 		s.append(returnTab(4) + "console.log('in update success');\n");
-		s.append(returnTab(4) + "res.sendStatus(200);\n"); //TODO: return something else
+		s.append(returnTab(4) + "res.jsonp(true);\n");
 		s.append(returnTab(3) + "}\n");
 		s.append(returnTab(2) + "});\n");
 		s.append(returnTab(1) + "});\n");
@@ -320,7 +340,7 @@ public class ApiCreator {
 		s.append(returnTab(3) + "if (err) { console.log('Error inserting'); }\n");
 		s.append(returnTab(3) + "else {\n");
 		s.append(returnTab(4) + "console.log('in insert success');\n");
-		s.append(returnTab(4) + "res.sendStatus(200);\n"); //TODO: return something else
+		s.append(returnTab(4) + "res.jsonp(true);\n");
 		s.append(returnTab(3) + "}\n");
 		s.append(returnTab(2) + "});\n");
 		s.append(returnTab(1) + "});\n");
