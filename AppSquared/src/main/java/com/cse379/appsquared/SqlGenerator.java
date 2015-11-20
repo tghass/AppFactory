@@ -20,6 +20,9 @@ public class SqlGenerator{
     public SqlGenerator(PrintWriter out){
         this.out=out;
     }
+    public SqlGenerator(){
+    
+    }
 
     ///////////
     //Methods//

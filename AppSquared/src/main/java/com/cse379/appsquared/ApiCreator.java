@@ -226,6 +226,11 @@ public class ApiCreator {
 			//adds all of the closing brackets
 			while (tabDepth +2> 0) {
 				s.append(returnTab(1+tabDepth) + "});\n");
+				 if (tabDepth == 1) {
+				 		s.append(returnTab(1+tabDepth) + "if (rows0.length == 0) {\n");
+						s.append(returnTab(2+tabDepth) + "res.jsonp([])\n");
+						s.append(returnTab(1+tabDepth) + "}\n");
+					}
 				tabDepth -= 1;
 			}
 			
@@ -253,14 +258,14 @@ public class ApiCreator {
         s.append("var express = require('express');\n");
         s.append("var app = express();\n");
         s.append("\n//Establish connection to the MySQL database\n");
-		
+		SqlGenerator sqlGen = new SqlGenerator();
         //TODO: replace with generated host,user,password, info
         s.append("var mysql = require('mysql');\n");
         s.append("var con = mysql.createConnection({\n");
         s.append("\thost : 'localhost',\n");
         s.append("\tuser : 'root',\n");
         s.append("\tpassword : 'hasskafka',\n");
-        s.append("\tdatabase : 'employee'\n");
+        s.append("\tdatabase : '"+sqlGen.tempDBName+"'\n");
         s.append("});\n");
 
         //Connect to the database
@@ -395,6 +400,10 @@ public class ApiCreator {
         String tableName = dataObj.getName();
        
         s.append("app.get('/" + tableName + "/find/:id', function(req,res) {\n");
+		
+		//know when to return response
+		s.append(returnTab(1) + "totalCount = 0;\n");
+		s.append(returnTab(1) + "count = 0;\n");
 		
 		//generates the BASIC select * from table where id = ?
         s.append(returnTab(1) + "var query = \""+ selectProperties(dataObj) + 
