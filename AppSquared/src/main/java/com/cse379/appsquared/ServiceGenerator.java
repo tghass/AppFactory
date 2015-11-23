@@ -32,7 +32,6 @@ public class ServiceGenerator {
 	}
 	
     public String genGetById(String name){
-
 		//Get by ID
 		return "    this.findById = function(id){\n"+
                         "        var deferred = $.Deferred();\n"+

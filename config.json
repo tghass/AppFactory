@@ -28,7 +28,7 @@
             "fields" : { 
                 "Name" : "string",
                 "OAuthID" : "string",
-                "PictureUrl" : "string",
+                "PictureUrl" : "long string",
                 "Info" : "long string"                  
             },
             "relations" : {

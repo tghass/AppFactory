@@ -2,6 +2,7 @@ package com.cse379.appsquared;
 
 import java.io.*;
 import java.util.*;
+import org.apache.commons.io.FileUtils;
 
 //Generates API following CRUD operations
 
@@ -10,6 +11,7 @@ public class ApiCreator {
     //////////
     //Fields//
     //////////
+    private static final File sourceConfig = new File("resources/config.js");
     public static int tabDepth = 0;
     public static int queryNo = 0;
     public static int queryNoNext = 1;
@@ -29,6 +31,13 @@ public class ApiCreator {
     //Methods//
     ///////////
     public void createServerFile(HashMap<String,DataObj> dataObjsMap, HashMap<String, PageObj> pageObjsMap){
+        //Copy files over
+        try{
+            FileUtils.copyFile(sourceConfig,new File("Output/config.js"));
+        }catch (IOException e){
+			System.out.println("Error copying over config file for");
+            System.out.println(e);
+        }
         out.write(genDbConnection());
         //For each data object, get object by ID
         Iterator it = dataObjsMap.entrySet().iterator();
@@ -242,10 +251,10 @@ public class ApiCreator {
 		return "";
 	}
 	public String genServerListen() {
-		StringBuilder s = new StringBuilder(1024);
-		s.append("var server = app.listen(3000, function() {\n");
+		StringBuilder s = new StringBuilder(512);
+		s.append("var server = app.listen(config.api_port, function() {\n");
 		s.append("\tconsole.log('We have started our server"
-				+ "on port 3000');\n");
+				+ " on port '+config.api_port);\n");
 		s.append("});\n");
 		return s.toString();
 	}
@@ -256,16 +265,16 @@ public class ApiCreator {
 				+ "application framework that provides a robust set of features" 
 				+ "for web and mobile applications\n");
         s.append("var express = require('express');\n");
-        s.append("var app = express();\n");
+        s.append("var app = express();\n\n");
+        s.append("var config = require('./config.js')");
         s.append("\n//Establish connection to the MySQL database\n");
 		SqlGenerator sqlGen = new SqlGenerator();
-        //TODO: replace with generated host,user,password, info
         s.append("var mysql = require('mysql');\n");
         s.append("var con = mysql.createConnection({\n");
-        s.append("\thost : 'localhost',\n");
-        s.append("\tuser : 'root',\n");
-        s.append("\tpassword : 'hasskafka',\n");
-        s.append("\tdatabase : '"+sqlGen.tempDBName+"'\n");
+        s.append("    host : config.db_host,\n");
+        s.append("    user : config.db_user,\n");
+        s.append("    password : config.db_password,\n");
+        s.append("    database : config.db_database\n");
         s.append("});\n");
 
         //Connect to the database
