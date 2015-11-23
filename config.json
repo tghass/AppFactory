@@ -44,6 +44,7 @@
             },
             "sortBy" : "BeganDate",
             "display" : [
+                //User references to the object which Frienship is a relation of
                 "User", "@ Friends since ", "BeganDate"
             ]
         },
@@ -68,7 +69,7 @@
             },
             "sortBy" : "PostDate",
             "display" : [
-                "@By ","CreatedBy","@On ","PostDate","Content"
+                "@By ","CreatedBy","@On ","CreateDate","Content"
             ]
         }
     },

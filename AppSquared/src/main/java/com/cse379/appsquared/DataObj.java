@@ -62,6 +62,13 @@ public class DataObj{
     public boolean addRelation(Relation n){
         return relations.add(n);
     }
+    public Relation getRelation(String r){
+        for(Relation rel : relations){
+            if(rel.getName().equals(r))
+                return rel;
+        }
+        return null;
+    }
     public boolean addDisplay(String n){
         return display.add(n);
     }

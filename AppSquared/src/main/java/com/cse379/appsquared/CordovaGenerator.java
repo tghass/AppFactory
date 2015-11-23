@@ -152,7 +152,8 @@ public class CordovaGenerator{
             System.out.println("\nCan't write Cordova code to file index.html");
         }
     }
-    private void createViewTemplate(HashMap<String,DataObj> dataObjsMap,String param, List<String> display, String base, PrintWriter writer){
+    private void createViewTemplate(HashMap<String,DataObj> dataObjsMap,String param, 
+            List<String> display, String base, PrintWriter writer){
         for(String di : display){
             if(di.startsWith("@"))
                 writer.write("    <p>"+di.substring(1)+"</p>\n");
@@ -174,8 +175,22 @@ public class CordovaGenerator{
                         writer.write(base+"."+di+"%></p>\n");
                     }
                 }
-                else{
-                    System.out.println("Error, Field is not a field of the obj");
+                else{//Find this obj
+                    Relation referencedRelation = dataObjsMap.get(di).getRelation(param);
+                    if(referencedRelation==null){
+                        System.out.println("\nError, Field"+di+" is not a field of the obj: "+param);
+                    }else{
+                        createViewTemplate(dataObjsMap,
+                                referencedRelation.getA(),
+                                dataObjsMap.get(referencedRelation.getA()).getDisplay(),
+                                base+"."+referencedRelation.getName()+1,
+                                writer);
+                        createViewTemplate(dataObjsMap,
+                                referencedRelation.getA(),
+                                dataObjsMap.get(referencedRelation.getB()).getDisplay(),
+                                base+"."+referencedRelation.getName()+2,
+                                writer);
+                    }
                 }
             }
         }
@@ -204,7 +219,7 @@ public class CordovaGenerator{
                     templateWriter.write("    <% for(var i=0;i<VIEW."+param+".length; i++){ %>\n");
 
                     //Use view and links to create the appropriate template
-                    createViewTemplate(dataObjsMap,param,display,"    <p><%= VIEW."+param+"[i]",templateWriter);
+                    createViewTemplate(dataObjsMap,param,display,"    <p class=\"view|"+param+"\"><%= VIEW."+param+"[i]",templateWriter);
 
                     templateWriter.write("    <% } %>\n");//end for loop
                     templateWriter.write("    <br>\n\n");
