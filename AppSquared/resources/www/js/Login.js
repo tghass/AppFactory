@@ -5,7 +5,9 @@ function loginHandler(r){
     hello(r.network).api('me').then(function(me){
         //console.log(me);
         serv.findByOAuthID(me.id).done(function(res){
-            if(res!=false){//We already have a user
+            console.log(res);
+            res=res[0];
+            if(res!=undefined){//We already have a user
                 LoggedInUser = res.ID;
                 setLogout();
                 window.location.hash='#';
@@ -19,6 +21,7 @@ function loginHandler(r){
                 };
                 serv.addUser(data).done(function(result){
                     serv.findByOAuthID(me.id).done(function(newResult){
+                        newResult=newResult[0];
                         LoggedInUser = newResult.ID;
                         setLogout();
                         window.location.hash='#';

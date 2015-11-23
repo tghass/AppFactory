@@ -35,19 +35,19 @@ public class ServiceGenerator {
 		//Get by ID
 		return "    this.findById = function(id){\n"+
                         "        var deferred = $.Deferred();\n"+
+                        "        var ret = [];\n"+
                         "        if(id===undefined){\n"+
-                        "            deferred.resolve({});\n"+
+                        "            deferred.resolve(ret);\n"+
                         "            return deferred.promise();\n"+
                         "        }\n"+
                         "        var url = baseUrl+'"+name+"/find/'+ id;\n"+
                         "        $.ajax({\n"+
                         "            url: url,\n"+
                         "            success: function(data) {\n"+
-                        "                if(data.length==0)\n"+
-                        "                    deferred.resolve({});\n"+
                         "                $.each(data, function(key, val) {\n"+
-                        "                    deferred.resolve(val);\n"+
+                        "                    ret.push(val);\n"+
                         "                });\n"+
+                        "                deferred.resolve(ret);\n"+
                         "            },\n"+
                         "            dataType: 'jsonp',\n"+
                         "            error: function(xhr, status, error) {\n"+
@@ -90,14 +90,14 @@ public class ServiceGenerator {
                         "            return deferred.promise();\n"+
                         "        }\n"+
                         "        var url = baseUrl+'"+name+"'"+ urlDecl.toString() +";\n"+
+                        "        var ret = [];\n"+
                         "        $.ajax({\n"+
                         "            url: url,\n"+
                         "            success: function(data) {\n"+
-                        "                if(data.length==0)\n"+
-                        "                    deferred.resolve({});\n"+
                         "                $.each(data, function(key, val) {\n"+
-                        "                    deferred.resolve(val);\n"+
+                        "                    ret.push(val);\n"+
                         "                });\n"+
+                        "                deferred.resolve(ret);\n"+
                         "            },\n"+
                         "            dataType: 'jsonp',\n"+
                         "            error: function(xhr, status, error) {\n"+
@@ -114,7 +114,7 @@ public class ServiceGenerator {
 			    "this.add"+name+" = function(data){\n"+
                         "        var deferred = $.Deferred();\n"+
                         "        if(data===undefined){\n"+
-                        "            deferred.resolve({});\n"+
+                        "            deferred.resolve(false);\n"+
                         "            return deferred.promise();\n"+
                         "        }\n"+
                         "        var url = baseUrl+'"+name+"/add';\n"+
@@ -132,7 +132,7 @@ public class ServiceGenerator {
                         "            },\n"+
                         "            error: function(xhr, status, error) {\n"+
                         "                console.log( xhr.responseText);\n"+
-                        "                deferred.resolve({});\n"+
+                        "                deferred.resolve(false);\n"+
                         "            }\n"+
                         "        }); \n"+
                         "        return deferred.promise();\n"+
@@ -144,7 +144,7 @@ public class ServiceGenerator {
 			    "this.update"+name+" = function(id,data){\n"+
                         "        var deferred = $.Deferred();\n"+
                         "        if(id===undefined){\n"+
-                        "            deferred.resolve({});\n"+
+                        "            deferred.resolve(false);\n"+
                         "            return deferred.promise();\n"+
                         "        }\n"+
                         "        var url = baseUrl+'"+name+"/update/'+id;\n"+
@@ -162,7 +162,7 @@ public class ServiceGenerator {
                         "            },\n"+
                         "            error: function(xhr, status, error) {\n"+
                         "                console.log( xhr.responseText);\n"+
-                        "                deferred.resolve({});\n"+
+                        "                deferred.resolve(false);\n"+
                         "            }\n"+
                         "        }); \n"+
                         "        return deferred.promise();\n"+
@@ -173,7 +173,7 @@ public class ServiceGenerator {
 			    "this.del"+name+" = function(id){\n"+
                         "        var deferred = $.Deferred();\n"+
                         "        if(id===undefined){\n"+
-                        "            deferred.resolve({});\n"+
+                        "            deferred.resolve(false)\n"+
                         "            return deferred.promise();\n"+
                         "        }\n"+
                         "        var url = baseUrl+'"+name+"/delete/'+id;\n"+
@@ -187,7 +187,7 @@ public class ServiceGenerator {
                         "            },\n"+
                         "            error: function(xhr, status, error) {\n"+
                         "                console.log( xhr.responseText);\n"+
-                        "                deferred.resolve({});\n"+
+                        "                deferred.resolve(false);n"+
                         "            }\n"+
                         "        }); \n"+
                         "        return deferred.promise();\n"+

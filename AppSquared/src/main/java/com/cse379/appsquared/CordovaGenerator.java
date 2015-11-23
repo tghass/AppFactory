@@ -173,7 +173,7 @@ public class CordovaGenerator{
                 //Just output params for now
                 for(String param : page.getShow(Section.Type.VIEW)){
                     List<String> display = dataObjsMap.get(param).getDisplay();
-                    templateWriter.write("    <p><%= JSON.stringify(VIEW)%></p>\n");
+                    templateWriter.write("    <p><%= JSON.stringify(VIEW."+param+")%></p>\n");
                     for(String di : display){
                         if(di.startsWith("@"))
                             templateWriter.write("    <p>"+di.substring(1)+"</p>\n");
