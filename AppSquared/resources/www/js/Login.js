@@ -5,7 +5,6 @@ function loginHandler(r){
     hello(r.network).api('me').then(function(me){
         //console.log(me);
         serv.findByOAuthID(me.id).done(function(res){
-            console.log(res);
             res=res[0];
             if(res!=undefined){//We already have a user
                 LoggedInUser = res.ID;

@@ -152,11 +152,11 @@ public class CordovaGenerator{
             System.out.println("\nCan't write Cordova code to file index.html");
         }
     }
-    private void createViewTemplate(HashMap<String,DataObj> dataObjsMap,String param, 
-            List<String> display, String base, PrintWriter writer){
+    private void createViewTemplate(HashMap<String,PageObj> pageObjMap, HashMap<String,DataObj> dataObjsMap,
+            String param, List<String> display, String base, PrintWriter writer){
         for(String di : display){
             if(di.startsWith("@"))
-                writer.write("    <p>"+di.substring(1)+"</p>\n");
+                writer.write("        <p>"+di.substring(1)+"</p>\n");
             else{
                 List<Field> fieldsOfThisObj = dataObjsMap.get(param).getFields();
                 int indOfField = -1;
@@ -169,23 +169,39 @@ public class CordovaGenerator{
                     if(thisField.getType()==Field.Type.FOREIGN_KEY){//It is a foregin key!
                         String objName = thisField.getTypeStr();
                         DataObj obj = dataObjsMap.get(objName);
-                        createViewTemplate(dataObjsMap,objName,obj.getDisplay(),base+"."+di,writer);
+                        createViewTemplate(pageObjMap,dataObjsMap,objName,obj.getDisplay(),base+"."+di,writer);
                     }
                     else{//Just a normal field
-                        writer.write(base+"."+di+"%></p>\n");
+                        if(di.equals(dataObjsMap.get(param).getLinkField())){//Should be a link
+                            String pageName = dataObjsMap.get(param).getLinkPage();
+                            //Find params
+                            StringBuilder params = new StringBuilder(64);//Add params to url
+                            params.append((pageName.equals("Home") ? "" : pageName));
+                            for(String parameter : pageObjMap.get(pageName).getParams()){
+                                if(parameter.equals("LoggedInUser"))
+                                    continue;
+                                params.append("/"+param+"/<%="+base+".ID%>");
+                            }
+
+                            writer.write("        <a href=\"#"+params.toString()+"\" class=\"view_"+param+"\"><%="+base+"."+di+"%></a>\n");
+                        }
+                        else
+                            writer.write("        <p class=\"view_"+param+"\"><%="+base+"."+di+"%></p>\n");
+
                     }
                 }
                 else{//Find this obj
-                    Relation referencedRelation = dataObjsMap.get(di).getRelation(param);
+                    Relation referencedRelation = dataObjsMap.get(di).getRelation(param);//Get relation of this field
                     if(referencedRelation==null){
                         System.out.println("\nError, Field"+di+" is not a field of the obj: "+param);
                     }else{
-                        createViewTemplate(dataObjsMap,
+                        //TODO, test this with a a to b relation where a!=b
+                        createViewTemplate(pageObjMap,dataObjsMap,
                                 referencedRelation.getA(),
                                 dataObjsMap.get(referencedRelation.getA()).getDisplay(),
                                 base+"."+referencedRelation.getName()+1,
                                 writer);
-                        createViewTemplate(dataObjsMap,
+                        createViewTemplate(pageObjMap,dataObjsMap,
                                 referencedRelation.getA(),
                                 dataObjsMap.get(referencedRelation.getB()).getDisplay(),
                                 base+"."+referencedRelation.getName()+2,
@@ -208,6 +224,7 @@ public class CordovaGenerator{
                         );
                 //Header
                 templateWriter.write("<header class=\"bar bar-nav\">\n"+
+                                     "    <a id=\"home\" class=\"icon pull-left\" href=\"#\">Home</a>\n"+
                                      "    <a id=\"login\" class=\"icon pull-right\" >Log In</a>\n"+
                                      "    <h1 class=\"title\">"+name+"</h1>\n"+
                                      "</header>\n");
@@ -219,7 +236,7 @@ public class CordovaGenerator{
                     templateWriter.write("    <% for(var i=0;i<VIEW."+param+".length; i++){ %>\n");
 
                     //Use view and links to create the appropriate template
-                    createViewTemplate(dataObjsMap,param,display,"    <p class=\"view|"+param+"\"><%= VIEW."+param+"[i]",templateWriter);
+                    createViewTemplate(pageObjMap,dataObjsMap,param,display,"VIEW."+param+"[i]",templateWriter);
 
                     templateWriter.write("    <% } %>\n");//end for loop
                     templateWriter.write("    <br>\n\n");
@@ -331,7 +348,6 @@ public class CordovaGenerator{
                                 "    router.addRoute('");
                 StringBuilder params = new StringBuilder(64);//Add params to url
                 params.append((pageName.equals("Home") ? "" : pageName));
-				
 
                 for(String param : page.getParams()){
                     if(param.equals("LoggedInUser"))
