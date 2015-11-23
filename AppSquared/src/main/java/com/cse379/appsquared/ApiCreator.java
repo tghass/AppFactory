@@ -214,6 +214,12 @@ public class ApiCreator {
 			//generates the BASIC select * from table where id = ?
 			s.append(returnTab(1) + "var query = \""+ selectProperties(dataObj) + 
 					" from " + tableName + " as " +tableName+ " where " + whereParams + "\";\n");
+			s.append(returnTab(1) + "con.query(query,"+ reqParams+", function(err, rows0,fields) {\n");
+			s.append(returnTab(2) +"if(err) throw err;\n");
+
+			//once the BASIC info is returned, each foreign key needs to be 
+			//expanded. this is done recursively with evaluateFK()
+			
 			tabDepth = 0;
 			queryNo = 0;
 			queryNoNext = 1;
@@ -222,12 +228,6 @@ public class ApiCreator {
 			if (fks.length() > 0) {
 				s.append(returnTab(tabDepth+2) + "count += 1;\n");
 			}
-			s.append(returnTab(1) + "con.query(query,"+ reqParams+", function(err, rows0,fields) {\n");
-			s.append(returnTab(2) +"if(err) throw err;\n");
-
-			//once the BASIC info is returned, each foreign key needs to be 
-			//expanded. this is done recursively with evaluateFK()
-			
 			s.append(returnTab(tabDepth+2) + "if (count == totalCount) {\n");
 			s.append(returnTab(tabDepth+3) + "res.jsonp(rows0);\n");
 			s.append(returnTab(tabDepth+2) + "}\n");
@@ -502,11 +502,11 @@ public class ApiCreator {
                             queryWhere += " and " + parName + ".id = ?";
                         }
 						
+                        if (depth == 0) {
+							s.append(returnTab(2+depth) +"totalCount += rows0.length;\n");
+						}
                         s.append(returnTab(2+depth) + parentRow
 													+ ".forEach(function(row) { \n");
-                        if (depth == 0) {
-							s.append(returnTab(3+depth) +"totalCount += rows0.length;\n");
-						}
 						s.append(returnTab(3+depth) + "query = \"" 
 													+ selectProperties(fkObj) + "\";\n");
                         s.append(returnTab(3+depth) + "query += \"from "+ queryFrom
