@@ -36,7 +36,7 @@ public class ServiceGenerator {
 		return "    this.findById = function(id){\n"+
                         "        var deferred = $.Deferred();\n"+
                         "        if(id===undefined){\n"+
-                        "            deferred.resolve(false);\n"+
+                        "            deferred.resolve({});\n"+
                         "            return deferred.promise();\n"+
                         "        }\n"+
                         "        var url = baseUrl+'"+name+"/find/'+ id;\n"+
@@ -44,7 +44,7 @@ public class ServiceGenerator {
                         "            url: url,\n"+
                         "            success: function(data) {\n"+
                         "                if(data.length==0)\n"+
-                        "                    deferred.resolve(false);\n"+
+                        "                    deferred.resolve({});\n"+
                         "                $.each(data, function(key, val) {\n"+
                         "                    deferred.resolve(val);\n"+
                         "                });\n"+
@@ -86,7 +86,7 @@ public class ServiceGenerator {
 		return "    "+varDecl.toString()+ " = function("+paramDecl.toString()+"){\n"+
                         "        var deferred = $.Deferred();\n"+
                         "        if( "+checkParams.toString()+"){\n"+
-                        "            deferred.resolve(false);\n"+
+                        "            deferred.resolve({});\n"+
                         "            return deferred.promise();\n"+
                         "        }\n"+
                         "        var url = baseUrl+'"+name+"'"+ urlDecl.toString() +";\n"+
@@ -94,7 +94,7 @@ public class ServiceGenerator {
                         "            url: url,\n"+
                         "            success: function(data) {\n"+
                         "                if(data.length==0)\n"+
-                        "                    deferred.resolve(false);\n"+
+                        "                    deferred.resolve({});\n"+
                         "                $.each(data, function(key, val) {\n"+
                         "                    deferred.resolve(val);\n"+
                         "                });\n"+
@@ -114,7 +114,7 @@ public class ServiceGenerator {
 			    "this.add"+name+" = function(data){\n"+
                         "        var deferred = $.Deferred();\n"+
                         "        if(data===undefined){\n"+
-                        "            deferred.resolve(false);\n"+
+                        "            deferred.resolve({});\n"+
                         "            return deferred.promise();\n"+
                         "        }\n"+
                         "        var url = baseUrl+'"+name+"/add';\n"+
@@ -132,7 +132,7 @@ public class ServiceGenerator {
                         "            },\n"+
                         "            error: function(xhr, status, error) {\n"+
                         "                console.log( xhr.responseText);\n"+
-                        "                deferred.resolve(false);\n"+
+                        "                deferred.resolve({});\n"+
                         "            }\n"+
                         "        }); \n"+
                         "        return deferred.promise();\n"+
@@ -144,7 +144,7 @@ public class ServiceGenerator {
 			    "this.update"+name+" = function(id,data){\n"+
                         "        var deferred = $.Deferred();\n"+
                         "        if(id===undefined){\n"+
-                        "            deferred.resolve(false);\n"+
+                        "            deferred.resolve({});\n"+
                         "            return deferred.promise();\n"+
                         "        }\n"+
                         "        var url = baseUrl+'"+name+"/update/'+id;\n"+
@@ -162,7 +162,7 @@ public class ServiceGenerator {
                         "            },\n"+
                         "            error: function(xhr, status, error) {\n"+
                         "                console.log( xhr.responseText);\n"+
-                        "                deferred.resolve(false);\n"+
+                        "                deferred.resolve({});\n"+
                         "            }\n"+
                         "        }); \n"+
                         "        return deferred.promise();\n"+
@@ -173,7 +173,7 @@ public class ServiceGenerator {
 			    "this.del"+name+" = function(id){\n"+
                         "        var deferred = $.Deferred();\n"+
                         "        if(id===undefined){\n"+
-                        "            deferred.resolve(false);\n"+
+                        "            deferred.resolve({});\n"+
                         "            return deferred.promise();\n"+
                         "        }\n"+
                         "        var url = baseUrl+'"+name+"/delete/'+id;\n"+
@@ -187,7 +187,7 @@ public class ServiceGenerator {
                         "            },\n"+
                         "            error: function(xhr, status, error) {\n"+
                         "                console.log( xhr.responseText);\n"+
-                        "                deferred.resolve(false);\n"+
+                        "                deferred.resolve({});\n"+
                         "            }\n"+
                         "        }); \n"+
                         "        return deferred.promise();\n"+

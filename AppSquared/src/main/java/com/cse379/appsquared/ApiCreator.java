@@ -50,12 +50,12 @@ public class ApiCreator {
 			out.write(genDelById(curDataObj));
 			out.write(genUpdateById(curDataObj));
 			out.write(genAdd(curDataObj));
-            //Hack to get a necessary API call for OAuth stuff
-            out.write(genGetByPageParam(null,new Section("View",
-                                                 new ArrayList<String>(Arrays.asList(new String[] {"OAuthID"})),
-                                                 new ArrayList<String>(Arrays.asList(new String[] {"User"}))),
-                                             dataObjsMap));
         }
+        //Hack to get a necessary API call for OAuth stuff
+        out.write(genGetByPageParam(null,new Section("View",
+                        new ArrayList<String>(Arrays.asList(new String[] {"OAuthID"})),
+                        new ArrayList<String>(Arrays.asList(new String[] {"User"}))),
+                    dataObjsMap));
 		
 		//For each page, generate the calls necessery to make
 		//the view/create params work
