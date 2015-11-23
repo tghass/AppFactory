@@ -10,7 +10,6 @@ function loginHandler(r){
             if(res!=undefined){//We already have a user
                 LoggedInUser = res.ID;
                 setLogout();
-                window.location.hash='#';
                 $(window).trigger('hashchange');
             }else{//Create a new user
                 var data = {
@@ -24,7 +23,6 @@ function loginHandler(r){
                         newResult=newResult[0];
                         LoggedInUser = newResult.ID;
                         setLogout();
-                        window.location.hash='#';
                         $(window).trigger('hashchange');
                     });
                 });

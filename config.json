@@ -35,7 +35,7 @@
                 "Friendship" : "User" //A User to User relationship
             },
             "display" : [  //The fields that are displayed on the Cordova App
-                "Name","PictureURL","Info"
+                "Name","PictureUrl","Info"
             ]
         },
         "Friendship" : {//Referring to the friendship in the User Data Object
@@ -56,7 +56,7 @@
             },
             "sortBy" : "CreateDate",
             "display" : [//What will actually be shown on the client
-                "Content","@ Created on ","CreateDate"
+                "Content","@ Created on ","CreateDate" ,"@By","CreatedBy"
             ]
         },
         "Comment" : {//Comments on a post
@@ -68,7 +68,7 @@
             },
             "sortBy" : "PostDate",
             "display" : [
-                " @By ","CreatedBy"," @On ","PostDate","Content"
+                "@By ","CreatedBy","@On ","PostDate","Content"
             ]
         }
     },

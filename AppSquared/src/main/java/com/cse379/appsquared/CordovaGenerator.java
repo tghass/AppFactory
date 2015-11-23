@@ -152,6 +152,34 @@ public class CordovaGenerator{
             System.out.println("\nCan't write Cordova code to file index.html");
         }
     }
+    private void createViewTemplate(HashMap<String,DataObj> dataObjsMap,String param, List<String> display, String base, PrintWriter writer){
+        for(String di : display){
+            if(di.startsWith("@"))
+                writer.write("    <p>"+di.substring(1)+"</p>\n");
+            else{
+                List<Field> fieldsOfThisObj = dataObjsMap.get(param).getFields();
+                int indOfField = -1;
+                for(int i=0;i<fieldsOfThisObj.size();i++){//Find which field it is
+                    if(fieldsOfThisObj.get(i).getName().equals(di))
+                        indOfField=i;
+                }
+                if(indOfField !=-1){//It is a field
+                    Field thisField = fieldsOfThisObj.get(indOfField);
+                    if(thisField.getType()==Field.Type.FOREIGN_KEY){//It is a foregin key!
+                        String objName = thisField.getTypeStr();
+                        DataObj obj = dataObjsMap.get(objName);
+                        createViewTemplate(dataObjsMap,objName,obj.getDisplay(),base+"."+di,writer);
+                    }
+                    else{//Just a normal field
+                        writer.write(base+"."+di+"%></p>\n");
+                    }
+                }
+                else{
+                    System.out.println("Error, Field is not a field of the obj");
+                }
+            }
+        }
+    }
     private void createTemplates(HashMap<String,PageObj> pageObjMap,HashMap<String,DataObj> dataObjsMap){
         Iterator it = pageObjMap.entrySet().iterator();
         while(it.hasNext()){
@@ -165,23 +193,20 @@ public class CordovaGenerator{
                         );
                 //Header
                 templateWriter.write("<header class=\"bar bar-nav\">\n"+
-                                     "    <a id=\"login\" class=\"icon pull-right\" href=\"#\">Log In</a>\n"+
+                                     "    <a id=\"login\" class=\"icon pull-right\" >Log In</a>\n"+
                                      "    <h1 class=\"title\">"+name+"</h1>\n"+
                                      "</header>\n");
                 //Body
                 templateWriter.write("<div id=\"maincontent\" class=\"content\">\n");
                 //Just output params for now
-                for(String param : page.getShow(Section.Type.VIEW)){
+                for(String param : page.getShow(Section.Type.VIEW)){//each dataobj we will show
                     List<String> display = dataObjsMap.get(param).getDisplay();
-                    templateWriter.write("    <p><%= JSON.stringify(VIEW."+param+")%></p>\n");
-                    for(String di : display){
-                        if(di.startsWith("@"))
-                            templateWriter.write("    <p>"+di.substring(1)+"</p>\n");
-                        else{
-                            //if(dataObjsMap.contains(di)){//We are displaying a 
-                            templateWriter.write("    <p><%= VIEW."+param+"."+di+"%></p>\n");
-                        }
-                    }
+                    templateWriter.write("    <% for(var i=0;i<VIEW."+param+".length; i++){ %>\n");
+
+                    //Use view and links to create the appropriate template
+                    createViewTemplate(dataObjsMap,param,display,"    <p><%= VIEW."+param+"[i]",templateWriter);
+
+                    templateWriter.write("    <% } %>\n");//end for loop
                     templateWriter.write("    <br>\n\n");
                 }
                 for(String param : page.getShow(Section.Type.CREATE)){
